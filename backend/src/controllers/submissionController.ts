@@ -23,13 +23,15 @@ export const submitAssignment = async (req: Request, res: Response) => {
     try {
         const assignmentId = req.params.id;
         const user = (req as any).user; // authMiddleware挂载的用户信息
+        const file = (req as any).file;
         if (user.role !== 'student') {
             return sendResponse(res, 403, false, 'Only students can submit assignments.');
         }
-        if (!req.file) {
+
+        if (!file) {
             return sendResponse(res, 400, false, 'No file uploaded.');
         }
-        const newFilePath = req.file.path;
+        const newFilePath = file.path;
 
         // 检查是否已有提交记录
         let submission = await Submission.findOne({
