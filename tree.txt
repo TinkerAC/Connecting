@@ -1,0 +1,44 @@
+my-fullstack-app/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   ├── authController.ts       // 用户登录、权限验证
+│   │   │   ├── assignmentController.ts // 作业相关接口
+│   │   │   └── userController.ts       // 用户数据管理
+│   │   ├── models/
+│   │   │   ├── index.ts                // Sequelize 初始化及关联关系
+│   │   │   ├── Assignment.ts           // 作业模型（如 title, description, dueDate 等）
+│   │   │   └── User.ts                 // 用户模型（如 username, password, role 等）
+│   │   ├── routes/
+│   │   │   ├── authRoutes.ts           // 登录、登出路由
+│   │   │   ├── assignmentRoutes.ts     // 作业 CRUD 路由
+│   │   │   └── userRoutes.ts           // 用户管理路由
+│   │   ├── app.ts                      // Express 应用入口
+│   │   └── server.ts                   // 启动服务
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── .env
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── Layout/
+│   │   │   │   ├── TopBar.vue          // 顶部栏组件
+│   │   │   │   ├── SideMenu.vue        // 左侧菜单组件
+│   │   │   │   └── Panel.vue           // Panel 框架（包含 TopBar 和 SideMenu）
+│   │   │   └── AssignmentForm.vue      // 可复用的作业表单组件（选用）
+│   │   ├── views/
+│   │   │   ├── Login.vue               // 登录页（不使用 Panel 框架）
+│   │   │   ├── TeacherDashboard.vue    // 教师主页（发布作业）
+│   │   │   ├── StudentDashboard.vue    // 学生主页（查看和提交作业）
+│   │   │   └── AdminDashboard.vue      // 管理员界面（直接管理数据）
+│   │   ├── router/
+│   │   │   └── index.ts                // 路由配置，根据路由判断是否显示 Panel 框架
+│   │   ├── store/
+│   │   │   └── index.ts                // Vuex 状态管理（或其他状态管理工具）
+│   │   ├── App.vue                     // 全局根组件（可做登录页与 Panel 页面区分）
+│   │   └── main.ts
+│   ├── package.json
+│   └── tsconfig.json
+└── README.md

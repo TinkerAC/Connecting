@@ -1,0 +1,32 @@
+// backend/src/middleware/auth.ts
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
+
+/**
+ * authMiddleware：返回一个中间件函数，只有当 token 中解析的角色在 allowedRoles 内时才允许访问
+ * @param allowedRoles 允许访问的角色列表
+ */
+export const authMiddleware = (allowedRoles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+        try {
+            const decoded = jwt.verify(token, JWT_SECRET) as any;
+            if (!allowedRoles.includes(decoded.role)) {
+                return res.status(403).json({ error: 'Permission denied' });
+            }
+            (req as any).user = decoded;
+            next();
+        } catch (error) {
+            return res.status(401).json({ error: 'Invalid token' });
+        }
+    };
+};
