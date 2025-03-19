@@ -12,7 +12,7 @@ import StudentCourseDetail from '@/views/student/StudentCourseDetail.vue';
 import Unauthorized from '@/views/Unauthorized.vue';
 import store from '@/store';
 import CourseManagement from "@/views/admin/CourseManagement.vue";
-
+import TeacherAssignmentDetail from "@/views/teacher/TeacherAssignmentDetail.vue";
 const routes: Array<RouteRecordRaw> = [
     {path: '/', redirect: '/login'},
     {path: '/login', name: 'Login', component: Login},
@@ -35,6 +35,13 @@ const routes: Array<RouteRecordRaw> = [
         component: TeacherCourseDetail,
         meta: {roles: ['teacher']}
     },
+    {
+        path: '/teacher/course/:id/assignment/:assignmentId',
+        name: 'TeacherAssignmentDetail',
+        component: TeacherAssignmentDetail,
+        meta: {roles: ['teacher']}
+    }
+    ,
     {
         path: '/student',
         name: 'StudentDashboard',

@@ -1,5 +1,5 @@
 // backend/src/controllers/enrollmentController.ts
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { CourseEnrollment, Course } from '../models';
 
 interface ApiResponse<T = any> {
@@ -19,30 +19,35 @@ const sendResponse = <T = any>(
 };
 
 // 学生报名课程：仅允许 role 为 'student'
-export const enrollCourse = async (req: Request, res: Response) => {
+export const enrollCourse: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const user = (req as any).user;
         if (user.role !== 'student') {
-            return sendResponse(res, 403, false, 'Only students can enroll in courses.');
+            sendResponse(res, 403, false, 'Only students can enroll in courses.');
+            return;
         }
         const { courseId } = req.body;
         if (!courseId) {
-            return sendResponse(res, 400, false, 'courseId is required.');
+            sendResponse(res, 400, false, 'courseId is required.');
+            return;
         }
         const course = await Course.findByPk(courseId);
         if (!course) {
-            return sendResponse(res, 404, false, 'Course not found.');
+            sendResponse(res, 404, false, 'Course not found.');
+            return;
         }
-        // 检查是否已报名
         const existing = await CourseEnrollment.findOne({ where: { courseId, studentId: user.id } });
         if (existing) {
-            return sendResponse(res, 400, false, 'Already enrolled in this course.');
+            sendResponse(res, 400, false, 'Already enrolled in this course.');
+            return;
         }
         const enrollment = await CourseEnrollment.create({ courseId, studentId: user.id });
-        return sendResponse(res, 201, true, 'Enrollment successful.', { enrollment });
+        sendResponse(res, 201, true, 'Enrollment successful.', { enrollment });
+        return;
     } catch (error) {
         console.error('Enroll course error:', error);
-        return sendResponse(res, 500, false, 'Failed to enroll in course.');
+        sendResponse(res, 500, false, 'Failed to enroll in course.');
+        return;
     }
 };
 
@@ -50,7 +55,7 @@ export const enrollCourse = async (req: Request, res: Response) => {
 // - 如果当前用户是 student，则返回该学生的报名记录；
 // - 如果是 teacher，则返回自己教授的课程的报名情况；
 // - 如果是 admin，则返回所有报名记录。
-export const getEnrollments = async (req: Request, res: Response) => {
+export const getEnrollments: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const user = (req as any).user;
         let enrollments;
@@ -72,32 +77,39 @@ export const getEnrollments = async (req: Request, res: Response) => {
                 include: [{ model: Course, as: 'course' }]
             });
         } else {
-            return sendResponse(res, 403, false, 'Permission denied.');
+            sendResponse(res, 403, false, 'Permission denied.');
+            return;
         }
-        return sendResponse(res, 200, true, 'Enrollments retrieved successfully.', { enrollments });
+        sendResponse(res, 200, true, 'Enrollments retrieved successfully.', { enrollments });
+        return;
     } catch (error) {
         console.error('Get enrollments error:', error);
-        return sendResponse(res, 500, false, 'Failed to get enrollments.');
+        sendResponse(res, 500, false, 'Failed to get enrollments.');
+        return;
     }
 };
 
 // 移除报名：允许学生自行退选，或 teacher/admin 删除报名记录。
 // 这里简单实现：仅允许学生删除自己的报名记录。
-export const removeEnrollment = async (req: Request, res: Response) => {
+export const removeEnrollment: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const user = (req as any).user;
         const { courseId } = req.body;
         if (!courseId) {
-            return sendResponse(res, 400, false, 'courseId is required.');
+            sendResponse(res, 400, false, 'courseId is required.');
+            return;
         }
         const enrollment = await CourseEnrollment.findOne({ where: { courseId, studentId: user.id } });
         if (!enrollment) {
-            return sendResponse(res, 404, false, 'Enrollment not found.');
+            sendResponse(res, 404, false, 'Enrollment not found.');
+            return;
         }
         await enrollment.destroy();
-        return sendResponse(res, 200, true, 'Enrollment removed successfully.');
+        sendResponse(res, 200, true, 'Enrollment removed successfully.');
+        return;
     } catch (error) {
         console.error('Remove enrollment error:', error);
-        return sendResponse(res, 500, false, 'Failed to remove enrollment.');
+        sendResponse(res, 500, false, 'Failed to remove enrollment.');
+        return;
     }
 };

@@ -24,6 +24,8 @@
                   Student Submissions:
                   <span>{{ assignment.submissionCount || 0 }}</span>
                 </p>
+                <!-- 新增按钮：查看作业分析 -->
+                <button @click="viewAnalysis(assignment.id)">查看分析</button>
               </div>
             </li>
           </ul>
@@ -83,7 +85,7 @@
 <script lang="ts">
 import { ref, onMounted } from 'vue';
 import Panel from '@/components/Layout/Panel.vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useStore } from 'vuex';
 
@@ -92,7 +94,9 @@ export default {
   components: { Panel },
   setup() {
     const route = useRoute();
+    const router = useRouter();
     const store = useStore();
+    // 从路由参数中获取课程ID
     const courseId = Number(route.params.id);
 
     const course = ref<any>(null);
@@ -114,23 +118,20 @@ export default {
     const loadCourseDetails = async () => {
       try {
         const response = await axios.get(`/api/courses/${courseId}`, getAuthConfig());
-        course.value = response.data.data.course || response.data.data;
+        course.value = response.data.data?.course || response.data.data;
       } catch (error) {
         console.error('Failed to load course details:', error);
         alert('Failed to load course details');
       }
     };
 
-    // 加载该课程下的所有作业
+    // 加载指定课程下的作业列表
     const loadAssignments = async () => {
       try {
-        const response = await axios.get('/api/assignments', {
-          params: { courseId },
-          ...getAuthConfig()
-        });
+        const response = await axios.get(`/api/courses/${courseId}/assignments`, getAuthConfig());
         assignments.value = Array.isArray(response.data)
             ? response.data
-            : (response.data.data?.assignments || response.data.data || []);
+            : response.data.data?.assignments || response.data.data || [];
       } catch (error) {
         console.error('Failed to load assignments:', error);
         alert('Failed to load assignments');
@@ -141,7 +142,7 @@ export default {
     const loadStudents = async () => {
       try {
         const response = await axios.get(`/api/courses/${courseId}/students`, getAuthConfig());
-        students.value = response.data.data.students || response.data.data || [];
+        students.value = response.data.data?.students || response.data.data || [];
       } catch (error) {
         console.error('Failed to load students:', error);
         alert('Failed to load students');
@@ -171,13 +172,27 @@ export default {
       showNewForm.value = !showNewForm.value;
     };
 
+    // 当点击查看分析按钮时，跳转到教师作业分析页面，URL 格式为 /teacher/course/:courseId/assignment/:assignmentId
+    const viewAnalysis = (assignmentId: number) => {
+      router.push(`/teacher/course/${courseId}/assignment/${assignmentId}`);
+    };
+
     onMounted(() => {
       loadCourseDetails();
       loadAssignments();
       loadStudents();
     });
 
-    return { course, assignments, students, showNewForm, newAssignment, publishAssignment, toggleNewForm };
+    return {
+      course,
+      assignments,
+      students,
+      showNewForm,
+      newAssignment,
+      publishAssignment,
+      toggleNewForm,
+      viewAnalysis,
+    };
   }
 };
 </script>

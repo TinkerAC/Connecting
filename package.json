@@ -2,11 +2,15 @@
   "name": "my-fullstack-app",
   "private": true,
   "scripts": {
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+    "dev:backend": "cd backend && pnpm run dev",
+    "dev:frontend": "cd frontend && pnpm run dev",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\""
   },
   "devDependencies": {
     "concurrently": "^8.0.1"
+  },
+  "dependencies": {
+    "jest": "^29.7.0",
+    "opencv4nodejs-prebuilt-install": "^4.1.209"
   }
 }

@@ -1,7 +1,7 @@
 <!-- frontend/src/components/Layout/TopBar.vue -->
 <template>
   <div class="topbar">
-    <h1>全栈网站</h1>
+    <h1>Connecting</h1>
     <div v-if="currentUser" class="user-info">
       <span>欢迎, {{ currentUser.username }} ({{ currentUser.role }})</span>
       <button @click="logout">退出登录</button>

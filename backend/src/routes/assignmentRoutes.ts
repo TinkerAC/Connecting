@@ -1,30 +1,42 @@
 // backend/src/routes/assignmentRoutes.ts
-import { Router } from 'express';
+import {Router} from 'express';
 import {
     createAssignment,
-    getAssignments,
-    updateAssignment,
     deleteAssignment,
+    getAssignmentById,
+    updateAssignment,
 } from '../controllers/assignmentController';
-import { submitAssignment } from '../controllers/submissionController';
-import { authMiddleware } from '../middleware/auth';
+import {submitAssignment} from '../controllers/submissionController';
+import {authMiddleware} from '../middleware/auth';
 import upload from '../middleware/upload';
+import {downloadSubmissionFile, getSubmissions} from "../controllers/userController";
+import {submitAnalysis} from "../controllers/analysisController";
+
 
 const router = Router();
 
-// 创建作业（基于课程）
+// 创建作业：允许 teacher 和 admin 使用
 router.post('/', authMiddleware(['teacher', 'admin']), createAssignment);
 
-// 查询作业列表（支持按 courseId 过滤）
-router.get('/', authMiddleware(['student', 'teacher', 'admin']), getAssignments);
+// 更新作业：允许 teacher 和 admin 使用
+router.put('/:assignmentId', authMiddleware(['teacher', 'admin']), updateAssignment);
+//查询作业：允许 teacher 和 admin 使用
+router.get('/:assignmentId', authMiddleware(['teacher', 'admin']), getAssignmentById);
 
-// 更新作业
-router.put('/:id', authMiddleware(['teacher', 'admin']), updateAssignment);
+// 删除作业：允许 teacher 和 admin 使用
+router.delete('/:assignmentId', authMiddleware(['teacher', 'admin']), deleteAssignment);
 
-// 删除作业
-router.delete('/:id', authMiddleware(['teacher', 'admin']), deleteAssignment);
+// 提交作业：仅允许 student 使用，使用 multer 处理文件上传（字段名为 file）
+router.post('/:assignmentId/submit', authMiddleware(['student']), upload.single('file'), submitAssignment);
 
-// 提交作业：仅允许学生提交作业，允许上传覆盖（文件上传字段名为 file）
-router.post('/:id/submit', authMiddleware(['student']), upload.single('file'), submitAssignment);
+// 仅允许 teacher 和 admin 查询该作业的所有提交记录
+router.get('/:assignmentId/submissions', authMiddleware(['teacher', 'admin']), getSubmissions);
+
+// 文件下载接口
+router.get('/:submissionId/download', authMiddleware(['teacher', 'admin']), downloadSubmissionFile);
+
+//教师或管理员分析作业任务提交接口
+router.post('/:assignmentId/analyze', authMiddleware(['teacher', 'admin']), submitAnalysis);
+
 
 export default router;

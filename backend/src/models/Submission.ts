@@ -7,6 +7,7 @@ export class Submission extends Model {
     public assignmentId!: number;
     public studentId!: number;
     public filePath!: string;
+    public originalFileName!: string; // 保留原始文件名
     public submittedAt!: Date;
 }
 
@@ -28,6 +29,11 @@ Submission.init(
         filePath: {
             type: DataTypes.STRING,
             allowNull: false,
+        },
+        originalFileName: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            comment: '原始上传文件的文件名'
         },
         submittedAt: {
             type: DataTypes.DATE,

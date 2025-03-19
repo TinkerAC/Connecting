@@ -16,7 +16,7 @@
         <h3>提交作业: {{ selectedAssignment.title }}</h3>
         <form @submit.prevent="submitAssignment">
           <div>
-            <input type="file" @change="handleFileUpload" accept=".doc,.docx" required />
+            <input type="file" @change="handleFileUpload" accept=".doc,.docx" required/>
           </div>
           <button type="submit">提交</button>
         </form>
@@ -26,14 +26,14 @@
 </template>
 
 <script lang="ts">
-import { ref, onMounted } from 'vue';
+import {onMounted, ref} from 'vue';
 import Panel from '@/components/Layout/Panel.vue';
 import axios from 'axios';
-import { useStore } from 'vuex';
+import {useStore} from 'vuex';
 
 export default {
   name: 'StudentDashboard',
-  components: { Panel },
+  components: {Panel},
   setup() {
     const store = useStore();
     const assignments = ref([]);
@@ -44,20 +44,10 @@ export default {
     const getAuthConfig = () => {
       const token = store.state.currentUser?.token;
       return {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {Authorization: `Bearer ${token}`}
       };
     };
 
-    const loadAssignments = async () => {
-      try {
-        const response = await axios.get('/api/assignments', getAuthConfig());
-        // 根据后端返回的数据结构调整
-        assignments.value = response.data.data || response.data;
-      } catch (error) {
-        console.error('加载作业失败:', error);
-        alert('加载作业失败');
-      }
-    };
 
     const selectAssignment = (assignment: any) => {
       selectedAssignment.value = assignment;
@@ -97,10 +87,10 @@ export default {
     };
 
     onMounted(() => {
-      loadAssignments();
+      // loadAssignments();
     });
 
-    return { assignments, selectedAssignment, selectAssignment, handleFileUpload, submitAssignment };
+    return {assignments, selectedAssignment, selectAssignment, handleFileUpload, submitAssignment};
   }
 };
 </script>

@@ -1,5 +1,5 @@
 // backend/src/controllers/authController.ts
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { User } from '../models';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -23,30 +23,36 @@ interface ApiResponse<T = any> {
  * @param message 提示信息
  * @param data 返回数据（可选）
  */
-const sendResponse = <T = any>(
+export const sendResponse = <T = any>(
     res: Response,
     status: number,
     success: boolean,
     message: string,
     data: T | null = null
-): Response<ApiResponse<T>> => {
+): Response<any> => {
     return res.status(status).json({ success, message, data });
 };
 
-export const register = async (req: Request, res: Response) => {
+/**
+ * register - 用户注册控制器
+ */
+export const register: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { username, password, role } = req.body;
         if (role !== 'admin' && role !== 'teacher' && role !== 'student') {
-            return sendResponse(res, 400, false, 'Invalid role.');
+            sendResponse(res, 400, false, 'Invalid role.');
+            return;
         }
         if (!username || !password || !role) {
-            return sendResponse(res, 400, false, 'Please provide username, password, and role.');
+            sendResponse(res, 400, false, 'Please provide username, password, and role.');
+            return;
         }
 
         // 检查用户名是否已存在
         const existingUser = await User.findOne({ where: { username } });
         if (existingUser) {
-            return sendResponse(res, 400, false, 'Username already exists.');
+            sendResponse(res, 400, false, 'Username already exists.');
+            return;
         }
 
         // 加密密码
@@ -54,28 +60,36 @@ export const register = async (req: Request, res: Response) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const user = await User.create({ username, password: hashedPassword, role });
-        return sendResponse(res, 201, true, 'Registration successful.', { userId: user.id });
+        sendResponse(res, 201, true, 'Registration successful.', { userId: user.id });
+        return;
     } catch (error) {
         console.error('Registration error:', error);
-        return sendResponse(res, 500, false, 'Registration failed.');
+        sendResponse(res, 500, false, 'Registration failed.');
+        return;
     }
 };
 
-export const login = async (req: Request, res: Response) => {
+/**
+ * login - 用户登录控制器
+ */
+export const login: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const { username, password } = req.body;
         if (!username || !password) {
-            return sendResponse(res, 400, false, 'Please provide username and password.');
+            sendResponse(res, 400, false, 'Please provide username and password.');
+            return;
         }
 
         const user = await User.findOne({ where: { username } });
         if (!user) {
-            return sendResponse(res, 400, false, 'User does not exist.');
+            sendResponse(res, 400, false, 'User does not exist.');
+            return;
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return sendResponse(res, 400, false, 'Incorrect password.');
+            sendResponse(res, 400, false, 'Incorrect password.');
+            return;
         }
 
         // 登录成功后生成 JWT，1 小时后过期
@@ -85,15 +99,16 @@ export const login = async (req: Request, res: Response) => {
             { expiresIn: '1h' }
         );
 
-        // 返回完整的用户信息：id, username, role 和 token
-        return sendResponse(res, 200, true, 'Login successful.', {
+        sendResponse(res, 200, true, 'Login successful.', {
             id: user.id,
             username: user.username,
             role: user.role,
-            token
+            token,
         });
+        return;
     } catch (error) {
         console.error('Login error:', error);
-        return sendResponse(res, 500, false, 'Login failed.');
+        sendResponse(res, 500, false, 'Login failed.');
+        return;
     }
 };
