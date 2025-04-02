@@ -28,6 +28,7 @@ export interface PairwiseComparison {
     overallSimilarity: number;
 }
 
+
 /** 定义总体分析结果 */
 export interface AnalysisResult {
     comparisons: PairwiseComparison[];
@@ -309,6 +310,25 @@ function calculateOverallSimilarity(
     );
 }
 
+/**
+ * 构建抄袭嫌疑网络
+ * @param comparisons 两两比对结果数组
+ * @param threshold 相似度阈值，默认 0.7
+ * @returns 返回符合抄袭嫌疑的网络数据数组
+ */
+export function buildPlagiarismNetwork(
+    comparisons: PairwiseComparison[],
+    threshold: number = 0.7
+): { source: string; target: string; similarity: number }[] {
+    return comparisons
+        .filter(c => c.overallSimilarity > threshold)
+        .map(c => ({
+            source: c.fileA,
+            target: c.fileB,
+            similarity: c.overallSimilarity
+        }));
+}
+
 
 /**
  * 主分析函数：依次解析每个 docx 文件，并两两比对
@@ -346,7 +366,7 @@ export async function analyzeDocxFiles(filePaths: string[]): Promise<AnalysisRes
 
     if (analyses.length === 0) {
         console.error("没有成功解析的文件。");
-        return { comparisons: [], plagiarismNetwork: [] };
+        return {comparisons: [], plagiarismNetwork: []};
     }
 
     console.log(`共成功解析 ${analyses.length} 个文件，开始进行两两比对...`);
@@ -382,14 +402,9 @@ export async function analyzeDocxFiles(filePaths: string[]): Promise<AnalysisRes
         }
     }
 
-    // 构造抄袭嫌疑网络：整体相似度大于 0.7 的两篇文档视为存在抄袭嫌疑
-    const plagiarismNetwork = comparisons.filter(c => c.overallSimilarity > 0.7)
-        .map(c => ({
-            source: c.fileA,
-            target: c.fileB,
-            similarity: c.overallSimilarity
-        }));
+    // 使用独立函数构造抄袭嫌疑网络
+    const plagiarismNetwork = buildPlagiarismNetwork(comparisons);
 
     console.log("分析完成。");
-    return { comparisons, plagiarismNetwork };
+    return {comparisons, plagiarismNetwork};
 }

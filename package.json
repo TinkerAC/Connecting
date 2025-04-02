@@ -10,6 +10,7 @@
     "concurrently": "^8.0.1"
   },
   "dependencies": {
+    "form-data": "^4.0.2",
     "jest": "^29.7.0",
     "opencv4nodejs-prebuilt-install": "^4.1.209"
   }

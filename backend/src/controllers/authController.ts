@@ -38,20 +38,22 @@ export const sendResponse = <T = any>(
  */
 export const register: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { username, password, role } = req.body;
-        if (role !== 'admin' && role !== 'teacher' && role !== 'student') {
-            sendResponse(res, 400, false, 'Invalid role.');
+        const { name, email, password, role } = req.body;
+        // 验证必填字段
+        if (!name || !email || !password || !role) {
+            sendResponse(res, 400, false, '请提供姓名、邮箱、密码和角色。');
             return;
         }
-        if (!username || !password || !role) {
-            sendResponse(res, 400, false, 'Please provide username, password, and role.');
+        // 检查角色是否有效
+        if (role !== 'admin' && role !== 'teacher' && role !== 'student') {
+            sendResponse(res, 400, false, '无效的角色。');
             return;
         }
 
-        // 检查用户名是否已存在
-        const existingUser = await User.findOne({ where: { username } });
+        // 检查邮箱是否已存在
+        const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
-            sendResponse(res, 400, false, 'Username already exists.');
+            sendResponse(res, 400, false, '邮箱已被注册。');
             return;
         }
 
@@ -59,12 +61,13 @@ export const register: RequestHandler = async (req: Request, res: Response, next
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const user = await User.create({ username, password: hashedPassword, role });
-        sendResponse(res, 201, true, 'Registration successful.', { userId: user.id });
+        // 创建用户
+        const user = await User.create({ name, email, password: hashedPassword, role });
+        sendResponse(res, 201, true, '注册成功。', { userId: user.id });
         return;
     } catch (error) {
-        console.error('Registration error:', error);
-        sendResponse(res, 500, false, 'Registration failed.');
+        console.error('注册错误:', error);
+        sendResponse(res, 500, false, '注册失败。');
         return;
     }
 };
@@ -74,41 +77,42 @@ export const register: RequestHandler = async (req: Request, res: Response, next
  */
 export const login: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { username, password } = req.body;
-        if (!username || !password) {
-            sendResponse(res, 400, false, 'Please provide username and password.');
+        const { email, password } = req.body;
+        if (!email || !password) {
+            sendResponse(res, 400, false, '请提供邮箱和密码。');
             return;
         }
 
-        const user = await User.findOne({ where: { username } });
+        const user = await User.findOne({ where: { email } });
         if (!user) {
-            sendResponse(res, 400, false, 'User does not exist.');
+            sendResponse(res, 400, false, '用户不存在。');
             return;
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            sendResponse(res, 400, false, 'Incorrect password.');
+            sendResponse(res, 400, false, '密码错误。');
             return;
         }
 
         // 登录成功后生成 JWT，1 小时后过期
         const token = jwt.sign(
-            { id: user.id, username: user.username, role: user.role },
+            { id: user.id, name: user.name, email: user.email, role: user.role },
             JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        sendResponse(res, 200, true, 'Login successful.', {
+        sendResponse(res, 200, true, '登录成功。', {
             id: user.id,
-            username: user.username,
+            name: user.name,
+            email: user.email,
             role: user.role,
             token,
         });
         return;
     } catch (error) {
-        console.error('Login error:', error);
-        sendResponse(res, 500, false, 'Login failed.');
+        console.error('登录错误:', error);
+        sendResponse(res, 500, false, '登录失败。');
         return;
     }
 };

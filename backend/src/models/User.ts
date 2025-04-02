@@ -4,10 +4,12 @@ import sequelize from './db';
 
 export class User extends Model {
     public id!: number;
-    public username!: string;
     public password!: string;
     public role!: 'admin' | 'teacher' | 'student';
+    public name!: string;
+    public email!: string;
 }
+
 
 User.init(
     {
@@ -16,7 +18,7 @@ User.init(
             autoIncrement: true,
             primaryKey: true
         },
-        username: {
+        email: {
             type: DataTypes.STRING,
             allowNull: false,
             unique: true
@@ -28,6 +30,10 @@ User.init(
         role: {
             type: DataTypes.ENUM('admin', 'teacher', 'student'),
             allowNull: false
+        },
+        name: {
+            type: DataTypes.STRING,
+            allowNull: false,
         }
     },
     {

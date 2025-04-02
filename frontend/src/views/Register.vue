@@ -4,8 +4,12 @@
     <h2>用户注册</h2>
     <form @submit.prevent="register">
       <div>
-        <label for="username">用户名：</label>
-        <input type="text" id="username" v-model="username" required />
+        <label for="name">姓名：</label>
+        <input type="text" id="name" v-model="name" required />
+      </div>
+      <div>
+        <label for="email">邮箱：</label>
+        <input type="email" id="email" v-model="email" required />
       </div>
       <div>
         <label for="password">密码：</label>
@@ -37,10 +41,11 @@ import axios from 'axios';
 export default {
   name: 'Register',
   setup() {
-    const username = ref('');
+    const name = ref('');
+    const email = ref('');
     const password = ref('');
     const confirmPassword = ref('');
-    const role = ref('学生'); // 默认选择学生
+    const role = ref('student'); // 默认选择学生
     const router = useRouter();
 
     const register = async () => {
@@ -50,7 +55,8 @@ export default {
       }
       try {
         const response = await axios.post('/api/auth/register', {
-          username: username.value,
+          name: name.value,
+          email: email.value,
           password: password.value,
           role: role.value
         });
@@ -63,7 +69,7 @@ export default {
       }
     };
 
-    return { username, password, confirmPassword, role, register };
+    return { name, email, password, confirmPassword, role, register };
   }
 };
 </script>

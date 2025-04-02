@@ -7,12 +7,13 @@ import assignmentRoutes from './routes/assignmentRoutes';
 import userRoutes from './routes/userRoutes';
 import courseRoutes from './routes/courseRoutes';
 import enrollmentRoutes from './routes/enrollmentRoutes';
+import analiseRouters from "./routes/analiseRouters";
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 
 
 app.use('/api/auth', authRoutes);
@@ -20,5 +21,6 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
+app.use('/api/analysis', analiseRouters);
 
 export default app;

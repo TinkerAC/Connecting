@@ -35,8 +35,7 @@ router.get('/:assignmentId/submissions', authMiddleware(['teacher', 'admin']), g
 // 文件下载接口
 router.get('/:submissionId/download', authMiddleware(['teacher', 'admin']), downloadSubmissionFile);
 
-//教师或管理员分析作业任务提交接口
-router.post('/:assignmentId/analyze', authMiddleware(['teacher', 'admin']), submitAnalysis);
+
 
 
 export default router;

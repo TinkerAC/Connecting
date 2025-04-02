@@ -38,20 +38,20 @@ export const getUser: RequestHandler = async (req: Request, res: Response, next:
 export const updateUser: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const userId = req.params.id;
-        const {username, password, role} = req.body;
+        const {name, password, role} = req.body;
         const user = await User.findByPk(userId);
         if (!user) {
             res.status(404).json({error: '用户不存在'});
             return;
         }
-        if (username) user.username = username;
+        if (name) user.name = name;
         if (password) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(password, salt);
         }
         if (role) user.role = role;
         await user.save();
-        res.json({message: '用户更新成功', user: {id: user.id, username: user.username, role: user.role}});
+        res.json({message: '用户更新成功', user: {id: user.id, name: user.name, role: user.role}});
         return;
     } catch (error) {
         console.error('更新用户错误:', error);
@@ -89,7 +89,13 @@ export const getSubmissions: RequestHandler = async (req: Request, res: Response
         // 验证当前用户权限（此处假设 authMiddleware 已经验证过角色）
         const submissions = await Submission.findAll({
             where: {assignmentId: Number(assignmentId)},
+            include: [{
+                model: User,
+                as: 'student',
+                attributes: ['id', 'name', 'email']
+            }]
         });
+
         sendResponse(res, 200, true, 'Submissions retrieved successfully.', {submissions});
         return
     } catch (error) {

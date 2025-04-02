@@ -9,7 +9,7 @@
           <thead>
           <tr>
             <th>ID</th>
-            <th>Username</th>
+            <th>Name</th>
             <th>Role</th>
             <th>Actions</th>
           </tr>
@@ -17,35 +17,11 @@
           <tbody>
           <tr v-for="user in users" :key="user.id">
             <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
+            <td>{{ user.name }}</td>
             <td>{{ user.role }}</td>
             <td>
               <button @click="editUser(user)">Edit</button>
               <button @click="deleteUser(user.id)">Delete</button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-      <div style="margin-top:20px;">
-        <h3>Assignment Management</h3>
-        <table border="1" cellspacing="0" cellpadding="5">
-          <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Actions</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="assignment in assignments" :key="assignment.id">
-            <td>{{ assignment.id }}</td>
-            <td>{{ assignment.title }}</td>
-            <td>{{ assignment.description }}</td>
-            <td>
-              <button @click="editAssignment(assignment)">Edit</button>
-              <button @click="deleteAssignment(assignment.id)">Delete</button>
             </td>
           </tr>
           </tbody>
@@ -98,7 +74,7 @@ export default {
     };
 
     const editUser = (user: any) => {
-      alert(`Edit user: ${user.username}`);
+      alert(`Edit user: ${user.rname}`);
       // 编辑逻辑待实现
     };
 
@@ -131,7 +107,6 @@ export default {
 
     onMounted(() => {
       loadUsers();
-      loadAssignments();
     });
 
     return { users, assignments, editUser, deleteUser, editAssignment, deleteAssignment };
