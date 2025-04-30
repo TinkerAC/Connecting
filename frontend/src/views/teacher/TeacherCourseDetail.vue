@@ -1,217 +1,140 @@
-<!-- frontend/src/views/TeacherCourseDetail.vue -->
+<!-- frontend/src/views/teacher/TeacherCourseDetail.vue -->
 <template>
   <Panel>
     <template #content>
-      <h2>Course Details (Teacher)</h2>
-
-      <!-- 课程基本信息 -->
-      <section v-if="course">
-        <h3>{{ course.title }}</h3>
-        <p>{{ course.description }}</p>
-        <p>Teacher ID: {{ course.teacherId }}</p>
+      <!-- 课程信息 -->
+      <section v-if="course" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow mb-8">
+        <h2 class="text-2xl font-semibold mb-2">{{ course.title }}</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-4">{{ course.description }}</p>
+        <p class="text-sm text-gray-500">教师 ID：{{ course.teacherId }}</p>
       </section>
+      <p v-else class="text-gray-500">正在加载课程信息…</p>
 
-      <!-- 课程作业部分 -->
-      <section>
-        <h3>Assignments</h3>
-        <div v-if="assignments.length">
-          <ul>
-            <li v-for="assignment in assignments" :key="assignment.id">
-              <div>
-                <strong>{{ assignment.title }}</strong>
-                <p>{{ assignment.description }}</p>
-                <p>
-                  Student Submissions:
-                  <span>{{ assignment.submissionCount || 0 }}</span>
-                </p>
-                <!-- 新增按钮：查看作业分析 -->
-                <button @click="viewAnalysis(assignment.id)">查看分析</button>
-              </div>
-            </li>
-          </ul>
+      <!-- 作业列表 -->
+      <section class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium">作业列表</h3>
+          <button @click="toggleNewForm"
+                  class="px-3 py-1 text-sm rounded bg-indigo-600 hover:bg-indigo-700 text-white">
+            {{ showNewForm ? '取消' : '发布新作业' }}
+          </button>
         </div>
-        <div v-else>
-          <p>No assignments found.</p>
-        </div>
-        <button @click="toggleNewForm">
-          {{ showNewForm ? 'Cancel' : 'Publish New Assignment' }}
-        </button>
-        <div v-if="showNewForm" class="new-assignment-form">
-          <h3>New Assignment</h3>
-          <form @submit.prevent="publishAssignment">
-            <div>
-              <label for="newTitle">Title:</label>
-              <input type="text" id="newTitle" v-model="newAssignment.title" required />
+
+        <ul v-if="assignments.length" class="space-y-4">
+          <li v-for="a in assignments" :key="a.id"
+              class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg flex flex-col gap-2 shadow">
+            <div class="flex items-center justify-between">
+              <span class="font-medium">{{ a.title }}</span>
+              <button @click="viewAnalysis(a.id)"
+                      class="text-xs px-2 py-1 rounded bg-green-600 hover:bg-green-700 text-white">查看分析</button>
             </div>
-            <div>
-              <label for="newDescription">Description:</label>
-              <textarea id="newDescription" v-model="newAssignment.description" required></textarea>
-            </div>
-            <button type="submit">Publish</button>
-          </form>
-        </div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">{{ a.description }}</p>
+            <span class="text-xs text-gray-500">提交数：{{ a.submissionCount || 0 }}</span>
+          </li>
+        </ul>
+        <p v-else class="text-gray-500">暂无作业</p>
+
+        <!-- 发布新作业表单 -->
+        <form v-if="showNewForm" @submit.prevent="publishAssignment"
+              class="mt-6 space-y-4 border-t border-gray-200 dark:border-gray-600 pt-6">
+          <div>
+            <label for="newTitle" class="block text-sm mb-1">标题</label>
+            <input id="newTitle" v-model="newAssignment.title" required
+                   class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          </div>
+          <div>
+            <label for="newDesc" class="block text-sm mb-1">描述</label>
+            <textarea id="newDesc" v-model="newAssignment.description" required rows="3"
+                      class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+          </div>
+          <div class="flex gap-3">
+            <button type="submit"
+                    class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white">发布</button>
+            <button type="button" @click="toggleNewForm"
+                    class="px-4 py-2 rounded bg-gray-400 hover:bg-gray-500 text-white">取消</button>
+          </div>
+        </form>
       </section>
 
-      <!-- 学生名单部分 -->
-      <section style="margin-top:20px;">
-        <h3>Enrolled Students</h3>
-        <div v-if="students.length">
-          <table border="1" cellspacing="0" cellpadding="5">
-            <thead>
-            <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Email</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="student in students" :key="student.id">
-              <td>{{ student.id }}</td>
-              <td>{{ student.username }}</td>
-              <td>{{ student.email || '-' }}</td>
-            </tr>
-            </tbody>
-          </table>
-        </div>
-        <div v-else>
-          <p>No students enrolled.</p>
-        </div>
-      </section>
+      <!-- 学生名单 -->
+      <section class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow">
+        <h3 class="text-lg font-medium mb-4">已选学生</h3>
+        <div v-if="students.length" class="overflow-x-auto">
+          <div class="overflow-x-auto">
+            <table class="min-w-full table-fixed text-sm">
+              <thead class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+              <tr>
+                <th class="w-1/6 px-3 py-2 text-left">ID</th>
+                <th class="w-2/6 px-3 py-2 text-left">姓名</th>
+                <th class="w-3/6 px-3 py-2 text-left">邮箱</th>
+              </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr
+                  v-for="s in students"
+                  :key="s.id"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+              >
+                <td class="px-3 py-2 text-left">{{ s.id }}</td>
+                <td class="px-3 py-2 text-left">{{ s.name }}</td>
+                <td class="px-3 py-2 text-left">{{ s.email || '-' }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
 
+        </div>
+        <p v-else class="text-gray-500">暂无学生</p>
+      </section>
     </template>
   </Panel>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import Panel from '@/components/Layout/Panel.vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
 import { useStore } from 'vuex';
+import axios from 'axios';
+import Panel from '@/components/Layout/Panel.vue';
 
-export default {
-  name: 'TeacherCourseDetail',
-  components: { Panel },
-  setup() {
-    const route = useRoute();
-    const router = useRouter();
-    const store = useStore();
-    // 从路由参数中获取课程ID
-    const courseId = Number(route.params.id);
+const route = useRoute();
+const router = useRouter();
+const store = useStore();
+const courseId = Number(route.params.id);
 
-    const course = ref<any>(null);
-    const assignments = ref<any[]>([]);
-    const students = ref<any[]>([]);
-    const showNewForm = ref(false);
-    const newAssignment = ref({
-      title: '',
-      description: ''
-    });
+const course = ref<any>(null);
+const assignments = ref<any[]>([]);
+const students = ref<any[]>([]);
+const showNewForm = ref(false);
+const newAssignment = ref({ title: '', description: '' });
 
-    // 构造附带 token 的请求配置
-    const getAuthConfig = () => {
-      const token = store.state.currentUser?.token;
-      return { headers: { Authorization: `Bearer ${token}` } };
-    };
+const getAuth = () => ({ headers: { Authorization: `Bearer ${store.state.currentUser?.token}` } });
 
-    // 加载课程基本信息
-    const loadCourseDetails = async () => {
-      try {
-        const response = await axios.get(`/api/courses/${courseId}`, getAuthConfig());
-        course.value = response.data.data?.course || response.data.data;
-      } catch (error) {
-        console.error('Failed to load course details:', error);
-        alert('Failed to load course details');
-      }
-    };
-
-    // 加载指定课程下的作业列表
-    const loadAssignments = async () => {
-      try {
-        const response = await axios.get(`/api/courses/${courseId}/assignments`, getAuthConfig());
-        assignments.value = Array.isArray(response.data)
-            ? response.data
-            : response.data.data?.assignments || response.data.data || [];
-      } catch (error) {
-        console.error('Failed to load assignments:', error);
-        alert('Failed to load assignments');
-      }
-    };
-
-    // 加载该课程的学生名单
-    const loadStudents = async () => {
-      try {
-        const response = await axios.get(`/api/courses/${courseId}/students`, getAuthConfig());
-        students.value = response.data.data?.students || response.data.data || [];
-      } catch (error) {
-        console.error('Failed to load students:', error);
-        alert('Failed to load students');
-      }
-    };
-
-    // 发布新作业
-    const publishAssignment = async () => {
-      try {
-        await axios.post('/api/assignments', {
-          courseId,
-          title: newAssignment.value.title,
-          description: newAssignment.value.description
-        }, getAuthConfig());
-        alert('Assignment published successfully');
-        await loadAssignments();
-        newAssignment.value.title = '';
-        newAssignment.value.description = '';
-        showNewForm.value = false;
-      } catch (error) {
-        console.error('Failed to publish assignment:', error);
-        alert('Failed to publish assignment');
-      }
-    };
-
-    const toggleNewForm = () => {
-      showNewForm.value = !showNewForm.value;
-    };
-
-    // 当点击查看分析按钮时，跳转到教师作业分析页面，URL 格式为 /teacher/course/:courseId/assignment/:assignmentId
-    const viewAnalysis = (assignmentId: number) => {
-      router.push(`/teacher/course/${courseId}/assignment/${assignmentId}`);
-    };
-
-    onMounted(() => {
-      loadCourseDetails();
-      loadAssignments();
-      loadStudents();
-    });
-
-    return {
-      course,
-      assignments,
-      students,
-      showNewForm,
-      newAssignment,
-      publishAssignment,
-      toggleNewForm,
-      viewAnalysis,
-    };
-  }
+const loadCourseDetails = async () => {
+  try { course.value = (await axios.get(`/api/courses/${courseId}`, getAuth())).data.data.course; }
+  catch { alert('无法加载课程信息'); }
 };
-</script>
+const loadAssignments = async () => {
+  try { assignments.value = (await axios.get(`/api/courses/${courseId}/assignments`, getAuth())).data.data.assignments || []; }
+  catch { alert('无法加载作业列表'); }
+};
+const loadStudents = async () => {
+  try { students.value = (await axios.get(`/api/courses/${courseId}/students`, getAuth())).data.data.students || []; }
+  catch { alert('无法加载学生列表'); }
+};
 
-<style scoped>
-.new-assignment-form {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-table th,
-table td {
-  padding: 8px;
-  text-align: left;
-  border: 1px solid #ccc;
-}
-</style>
+const publishAssignment = async () => {
+  try {
+    await axios.post('/api/assignments', { courseId, ...newAssignment.value }, getAuth());
+    await loadAssignments();
+    newAssignment.value = { title: '', description: '' };
+    showNewForm.value = false;
+    alert('发布成功');
+  } catch { alert('发布失败'); }
+};
+
+const toggleNewForm = () => (showNewForm.value = !showNewForm.value);
+const viewAnalysis = (aid: number) => router.push(`/teacher/course/${courseId}/assignment/${aid}`);
+
+onMounted(() => { loadCourseDetails(); loadAssignments(); loadStudents(); });
+</script>

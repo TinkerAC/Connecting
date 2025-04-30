@@ -1,38 +1,18 @@
-<!-- frontend/src/components/Layout/Panel.vue -->
 <template>
-  <div class="panel-layout">
+  <div class="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 select-none">
     <TopBar />
-    <div class="main-container">
+
+    <div class="flex flex-1 overflow-hidden">
       <SideMenu />
-      <div class="content">
-        <slot name="content"></slot>
+      <!-- Main scrollable area -->
+      <div class="flex-1 overflow-y-auto p-6 lg:p-8 bg-gray-50 dark:bg-gray-900/40">
+        <slot name="content" />
       </div>
     </div>
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import TopBar from './TopBar.vue';
 import SideMenu from './SideMenu.vue';
-
-export default {
-  name: 'Panel',
-  components: { TopBar, SideMenu }
-};
 </script>
-
-<style scoped>
-.panel-layout {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-}
-.main-container {
-  display: flex;
-  flex: 1;
-}
-.content {
-  flex: 1;
-  padding: 20px;
-}
-</style>

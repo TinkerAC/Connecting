@@ -1,6 +1,7 @@
 // frontend/src/main.ts
 import { createApp } from 'vue';
 import App from './App.vue';
+import '../tailwind.css'
 import router from './router';
 import store from './store';
 

@@ -1,100 +1,76 @@
-<!-- frontend/src/views/StudentDashboard.vue -->
+<!-- ========= 2. frontend/src/views/student/StudentDashboard.vue ========= -->
 <template>
   <Panel>
     <template #content>
-      <h2>学生主页 - 查看及提交作业</h2>
-      <div>
-        <h3>当前作业列表</h3>
-        <ul>
-          <li v-for="assignment in assignments" :key="assignment.id">
-            <span>{{ assignment.title }}</span>
-            <button @click="selectAssignment(assignment)">提交作业</button>
-          </li>
-        </ul>
-      </div>
-      <div v-if="selectedAssignment">
-        <h3>提交作业: {{ selectedAssignment.title }}</h3>
-        <form @submit.prevent="submitAssignment">
-          <div>
-            <input type="file" @change="handleFileUpload" accept=".doc,.docx" required/>
-          </div>
-          <button type="submit">提交</button>
-        </form>
+      <h2 class="text-2xl font-semibold mb-6">学生主页 · 当前作业</h2>
+
+      <ul class="space-y-4">
+        <li v-for="a in assignments" :key="a.id"
+            class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg shadow flex justify-between items-center">
+          <span>{{ a.title }}</span>
+          <button @click="selectAssignment(a)"
+                  class="text-xs px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white">提交作业
+          </button>
+        </li>
+      </ul>
+
+      <!-- 提交区 -->
+      <div v-if="selectedAssignment" class="mt-8 bg-white dark:bg-gray-800 rounded-xl p-6 shadow space-y-4">
+        <h3 class="text-lg font-medium">提交：{{ selectedAssignment.title }}</h3>
+        <input type="file" accept=".doc,.docx" @change="handleFileUpload"
+               class="w-full text-sm text-gray-500 file:mr-4 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-gray-200 dark:file:bg-gray-600 file:text-gray-700 dark:file:text-gray-100"/>
+        <button @click="submitAssignment"
+                class="px-4 py-2 rounded bg-green-600 hover:bg-green-700 text-white">确认提交
+        </button>
       </div>
     </template>
   </Panel>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import {onMounted, ref} from 'vue';
-import Panel from '@/components/Layout/Panel.vue';
-import axios from 'axios';
 import {useStore} from 'vuex';
+import axios from 'axios';
+import Panel from '@/components/Layout/Panel.vue';
 
-export default {
-  name: 'StudentDashboard',
-  components: {Panel},
-  setup() {
-    const store = useStore();
-    const assignments = ref([]);
-    const selectedAssignment = ref<any>(null);
-    const file = ref<File | null>(null);
+const store = useStore();
+const assignments = ref<any[]>([]);
+const selectedAssignment = ref<any>(null);
+const file = ref<File | null>(null);
 
-    // 辅助函数：构造带有 token 的请求配置
-    const getAuthConfig = () => {
-      const token = store.state.currentUser?.token;
-      return {
-        headers: {Authorization: `Bearer ${token}`}
-      };
-    };
+const auth = () => ({headers: {Authorization: `Bearer ${store.state.currentUser?.token}`}});
 
-
-    const selectAssignment = (assignment: any) => {
-      selectedAssignment.value = assignment;
-    };
-
-    const handleFileUpload = (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      if (target.files && target.files.length > 0) {
-        file.value = target.files[0];
-      }
-    };
-
-    const submitAssignment = async () => {
-      if (!file.value || !selectedAssignment.value) {
-        alert('请先选择作业和上传文件');
-        return;
-      }
-      try {
-        const formData = new FormData();
-        formData.append('file', file.value);
-        formData.append('assignmentId', selectedAssignment.value.id);
-        // 假设后端实现了文件上传接口，并需要认证 token
-        const response = await axios.post('/api/assignments/submit', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            ...getAuthConfig().headers
-          }
-        });
-        console.log('提交作业成功:', response.data);
-        alert('作业提交成功');
-        selectedAssignment.value = null;
-        file.value = null;
-      } catch (error) {
-        console.error('提交作业错误:', error);
-        alert('作业提交失败');
-      }
-    };
-
-    onMounted(() => {
-      // loadAssignments();
-    });
-
-    return {assignments, selectedAssignment, selectAssignment, handleFileUpload, submitAssignment};
+const loadAssignments = async () => {
+  try {
+    const {data} = await axios.get('/api/assignments/current', auth()); // 假设有该接口
+    assignments.value = data.data || [];
+  } catch { /* 忽略 */
   }
 };
-</script>
 
-<style scoped>
-/* 根据需要添加样式 */
-</style>
+const selectAssignment = (a: any) => {
+  selectedAssignment.value = a;
+};
+const handleFileUpload = (e: Event) => {
+  const files = (e.target as HTMLInputElement).files;
+  if (files && files[0]) file.value = files[0];
+};
+const submitAssignment = async () => {
+  if (!file.value || !selectedAssignment.value) return alert('请选择作业和文件');
+  const fd = new FormData();
+  fd.append('file', file.value);
+  fd.append('assignmentId', selectedAssignment.value.id);
+  try {
+    await axios.post('/api/assignments/submit', fd, {
+      headers: {...auth().headers, 'Content-Type': 'multipart/form-data'}
+    });
+    alert('提交成功');
+    file.value = null;
+    selectedAssignment.value = null;
+  } catch {
+    alert('提交失败');
+  }
+};
+
+onMounted(loadAssignments);
+</script>

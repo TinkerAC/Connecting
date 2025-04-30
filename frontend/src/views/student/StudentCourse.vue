@@ -1,110 +1,67 @@
-<!-- frontend/src/views/StudentCourse.vue -->
+<!-- ========= 1A. frontend/src/views/student/StudentCourse.vue ========= -->
 <template>
   <Panel>
     <template #content>
-      <h2>My Courses (Student)</h2>
-      <!-- 加入课程区域 -->
-      <div class="join-course">
-        <label for="joinCourseId">输入课程ID加入课程：</label>
-        <input type="number" id="joinCourseId" v-model.number="joinCourseId" />
-        <button @click="joinCourse">加入课程</button>
+      <h2 class="text-2xl font-semibold mb-6">我的课程</h2>
+
+      <!-- 加入课程 -->
+      <div class="mb-8 p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex flex-col sm:flex-row items-center gap-4">
+        <label for="joinCourseId" class="text-sm shrink-0">课程 ID：</label>
+        <input id="joinCourseId" v-model.number="joinCourseId" type="number" placeholder="输入课程 ID"
+               class="w-full sm:w-40 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+        <button @click="joinCourse"
+                class="px-4 py-2 rounded bg-indigo-600 hover:bg-indigo-700 text-white shrink-0">加入课程</button>
       </div>
 
       <!-- 已加入课程列表 -->
-      <div v-if="courses.length">
-        <ul>
-          <li v-for="course in courses" :key="course.id">
-            <strong>{{ course.title }}</strong>
-            <p>{{ course.description }}</p>
-            <!-- 点击后进入课程详情页面 -->
-            <button @click="goToCourse(course.id)">查看课程详情</button>
-          </li>
-        </ul>
-      </div>
-      <div v-else>
-        <p>尚未加入任何课程，请输入课程ID加入课程。</p>
-      </div>
+      <ul v-if="courses.length" class="space-y-4">
+        <li v-for="c in courses" :key="c.id"
+            class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg shadow flex flex-col gap-2">
+          <h3 class="font-medium">{{ c.title }}</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ c.description }}</p>
+          <button @click="goToCourse(c.id)"
+                  class="self-start text-xs px-3 py-1 rounded bg-green-600 hover:bg-green-700 text-white">查看详情</button>
+        </li>
+      </ul>
+      <p v-else class="text-gray-500">尚未加入任何课程，请输入课程 ID 加入。</p>
     </template>
   </Panel>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import Panel from '@/components/Layout/Panel.vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
+import axios from 'axios';
+import Panel from '@/components/Layout/Panel.vue';
 
-export default {
-  name: 'StudentCourse',
-  components: { Panel },
-  setup() {
-    const courses = ref([]);
-    const joinCourseId = ref<number | null>(null);
-    const router = useRouter();
-    const store = useStore();
+const courses = ref<any[]>([]);
+const joinCourseId = ref<number | null>(null);
+const router = useRouter();
+const store = useStore();
 
-    // 获取token并构造请求配置
-    const getAuthConfig = () => {
-      const token = store.state.currentUser?.token;
-      return { headers: { Authorization: `Bearer ${token}` } };
-    };
+const auth = () => ({ headers: { Authorization: `Bearer ${store.state.currentUser?.token}` } });
 
-    // 加载当前学生已报名的课程
-    const loadCourses = async () => {
-      try {
-        const response = await axios.get('/api/enrollments', getAuthConfig());
-        // 假设后端返回的数据结构为 { success, message, data: { enrollments: [...] } }
-        const enrollments = response.data.data.enrollments || [];
-        courses.value = enrollments.map((enrollment: any) => enrollment.course);
-      } catch (error) {
-        console.error('Failed to load courses:', error);
-        alert('加载课程失败');
-      }
-    };
+const loadCourses = async () => {
+  try {
+    const { data } = await axios.get('/api/enrollments', auth());
+    courses.value = data.data.enrollments.map((e: any) => e.course);
+  } catch { alert('加载课程失败'); }
+};
 
-    // 通过输入的课程ID加入课程
-    const joinCourse = async () => {
-      if (!joinCourseId.value) {
-        alert('请输入课程ID');
-        return;
-      }
-      try {
-        await axios.post('/api/enrollments', { courseId: joinCourseId.value }, getAuthConfig());
-        alert('加入课程成功');
-        joinCourseId.value = null;
-        await loadCourses();
-      } catch (error: any) {
-        console.error('Failed to join course:', error);
-        alert('加入课程失败：' + (error.response?.data?.error || '未知错误'));
-      }
-    };
-
-    // 点击课程跳转到课程详情页面
-    const goToCourse = (courseId: number) => {
-      router.push(`/student/course/${courseId}`);
-    };
-
-    onMounted(() => {
-      loadCourses();
-    });
-
-    return { courses, joinCourseId, joinCourse, goToCourse };
+const joinCourse = async () => {
+  if (!joinCourseId.value) return alert('请输入课程 ID');
+  try {
+    await axios.post('/api/enrollments', { courseId: joinCourseId.value }, auth());
+    joinCourseId.value = null;
+    await loadCourses();
+    alert('加入成功');
+  } catch (e: any) {
+    alert('加入失败：' + (e.response?.data?.error || '未知错误'));
   }
 };
-</script>
 
-<style scoped>
-.join-course {
-  margin-bottom: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-}
-.join-course label {
-  margin-right: 10px;
-}
-.join-course input {
-  width: 100px;
-  margin-right: 10px;
-}
-</style>
+const goToCourse = (id: number) => router.push(`/student/course/${id}`);
+
+onMounted(loadCourses);
+</script>

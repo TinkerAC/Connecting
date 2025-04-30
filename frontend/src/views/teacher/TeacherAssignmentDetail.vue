@@ -1,425 +1,258 @@
+<!-- ================================ TeacherAssignmentDetail.vue ================================ -->
 <template>
   <Panel>
     <template #content>
-      <h2>Assignment Analysis (Teacher)</h2>
+      <div class="space-y-8">
 
-      <!-- 作业基本信息 -->
-      <section v-if="assignment">
-        <h3>{{ assignment.title }}</h3>
-        <p>{{ assignment.description }}</p>
-        <p>Submission Count: {{ assignment.submissionCount || 0 }}</p>
-      </section>
-      <section v-else>
-        <p>Loading assignment details...</p>
-      </section>
+        <!-- 作业信息 -->
+        <section v-if="assignment" class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+          <h2 class="text-2xl font-semibold mb-2">{{ assignment.title }}</h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-1">{{ assignment.description }}</p>
+          <p class="text-sm text-gray-500">提交数：{{ assignment.submissionCount || 0 }}</p>
+        </section>
+        <p v-else class="text-gray-500">加载作业信息...</p>
 
-      <!-- 分析操作区域 -->
-      <section style="margin-top:20px;">
-        <h3>Analysis Report</h3>
-        <img src="" alt="Analysis Report Placeholder" style="max-width: 100%;" />
-        <div v-if="analysisStatus">
-          <p>Status: {{ analysisStatus.status }}</p>
-          <p>Progress: {{ analysisStatus.progress }}%</p>
-        </div>
-        <div v-if="!analysisRunning">
-          <button @click="startAnalysis">Start Analysis</button>
-        </div>
-      </section>
+        <!-- 分析操作 -->
+        <section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 space-y-4">
+          <h3 class="text-lg font-medium">分析报告</h3>
 
-      <!-- 多重过滤器设置 -->
-      <section style="margin-top:20px;">
-        <h3>Filter Options</h3>
-        <div>
-          <label>Overall Similarity Threshold:</label>
-          <input type="number" v-model.number="filter.overall" step="0.01" min="0" max="1" />
-        </div>
-        <div>
-          <label>Text Similarity Threshold:</label>
-          <input type="number" v-model.number="filter.text" step="0.01" min="0" max="1" />
-        </div>
-        <div>
-          <label>Image Similarity Threshold:</label>
-          <input type="number" v-model.number="filter.image" step="0.01" min="0" max="1" />
-        </div>
-        <div>
-          <label>Structure Similarity Threshold:</label>
-          <input type="number" v-model.number="filter.structure" step="0.01" min="0" max="1" />
-        </div>
-        <div>
-          <label>Metadata Similarity Threshold:</label>
-          <input type="number" v-model.number="filter.metadata" step="0.01" min="0" max="1" />
-        </div>
-        <button @click="initNetworkChart">Apply Filter</button>
-      </section>
+          <template v-if="analysisStatus">
+            <p>
+              状态：
+              <span :class="statusColor">{{ analysisStatus.status }}</span>
+            </p>
+            <div v-if="analysisStatus.progress !== undefined"
+                 class="w-full bg-gray-200 h-2 rounded overflow-hidden">
+              <div class="h-full bg-indigo-500 transition-all"
+                   :style="{ width: analysisStatus.progress + '%' }"/>
+            </div>
+          </template>
 
-      <!-- 分析结果展示：抄袭网络图 -->
-      <section style="margin-top:20px;"
-               v-if="analysisStatus && analysisStatus.status === 'completed' && analysisStatus.result && analysisStatus.submissionInfos">
-        <h3>Plagiarism Network Graph</h3>
-        <div ref="networkChart" style="width: 100%; height: 500px;"></div>
-      </section>
+          <button v-if="!analysisRunning"
+                  @click="startAnalysis"
+                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow">
+            启动分析
+          </button>
+          <button v-else disabled class="px-4 py-2 bg-gray-400 text-white rounded-lg">分析中...</button>
+        </section>
 
-      <!-- 提交记录列表 -->
-      <section style="margin-top:20px;" v-if="submissions.length">
-        <h3>Student Submissions</h3>
-        <table border="1" cellspacing="0" cellpadding="5">
-          <thead>
-          <tr>
-            <th>Student ID</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Submitted At</th>
-            <th>Action</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="submission in submissions" :key="submission.id">
-            <td>{{ submission.studentId }}</td>
-            <td>{{ submission.student.name }}</td>
-            <td>{{ submission.student.email }}</td>
-            <td>{{ formatDate(submission.submittedAt) }}</td>
-            <td>
-              <button @click="downloadSubmission(submission.id, submission.student.name)">Download File</button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </section>
-      <section v-else style="margin-top:20px;">
-        <p>No submissions found.</p>
-      </section>
+        <!-- 过滤器 -->
+        <section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6 space-y-4">
+          <h3 class="text-lg font-medium">过滤条件</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div v-for="(v, k) in filter" :key="k" class="flex flex-col">
+              <label :for="k" class="text-sm mb-1 capitalize">{{ k }} 阈值</label>
+              <input type="number"
+                     :id="k"
+                     v-model.number="filter[k]"
+                     step="0.01" min="0" max="1"
+                     class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400" />
+            </div>
+          </div>
+          <button @click="initNetworkChart"
+                  class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow">
+            应用过滤
+          </button>
+        </section>
 
-      <!-- 返回按钮 -->
-      <button @click="goBack" style="margin-top:20px;">Back to Course Details</button>
+        <!-- 抄袭关系图 -->
+        <section v-if="showGraph" class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+          <h3 class="text-lg font-medium mb-4">抄袭关系网络图</h3>
+          <div ref="networkChart" class="w-full h-[500px]" />
+        </section>
+
+        <!-- 提交表 -->
+        <section class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
+          <h3 class="text-lg font-medium mb-4">学生提交</h3>
+
+          <div v-if="submissions.length" class="overflow-x-auto">
+            <table class="min-w-full text-sm text-left">
+              <thead class="bg-gray-100 dark:bg-gray-700">
+              <tr>
+                <th class="px-3 py-2">学号</th>
+                <th class="px-3 py-2">姓名</th>
+                <th class="px-3 py-2">邮箱</th>
+                <th class="px-3 py-2">提交时间</th>
+                <th class="px-3 py-2">操作</th>
+              </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-for="s in submissions" :key="s.id"
+                  class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                <td class="px-3 py-2">{{ s.studentId }}</td>
+                <td class="px-3 py-2">{{ s.student.name }}</td>
+                <td class="px-3 py-2">{{ s.student.email }}</td>
+                <td class="px-3 py-2">{{ formatDate(s.submittedAt) }}</td>
+                <td class="px-3 py-2">
+                  <button @click="downloadSubmission(s.id, s.student.name)"
+                          class="px-2 py-1 text-xs bg-indigo-500 hover:bg-indigo-600 text-white rounded">
+                    下载
+                  </button>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p v-else class="text-gray-500">暂无提交记录</p>
+        </section>
+
+        <button @click="goBack"
+                class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg shadow">
+          返回课程
+        </button>
+      </div>
     </template>
   </Panel>
 </template>
 
-<script lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import Panel from '@/components/Layout/Panel.vue';
+<script lang="ts" setup>
+import { ref, nextTick, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
 import { useStore } from 'vuex';
+import axios from 'axios';
 import * as echarts from 'echarts';
+import Panel from "@/components/Layout/Panel.vue";
 
-export default {
-  name: 'TeacherAssignmentDetail',
-  components: { Panel },
-  setup() {
-    const route = useRoute();
-    const router = useRouter();
-    const store = useStore();
-    const assignmentId = Number(route.params.assignmentId);
-    const courseId = Number(route.params.courseId);
+const route = useRoute();
+const router = useRouter();
+const store = useStore();
+const assignmentId = Number(route.params.assignmentId);
+const courseId = Number(route.params.courseId);
 
-    const assignment = ref<any>(null);
-    const submissions = ref<any[]>([]);
-    // analysisStatus 包含后端返回的 submissionInfos、result.comparisons 以及 status 等字段
-    const analysisStatus = ref<any>(null);
-    const analysisRunning = ref(false);
-    const analysisTaskId = ref<string>('');
-    let pollInterval: number | undefined = undefined;
+const assignment      = ref<any>(null);
+const submissions     = ref<any[]>([]);
+const analysisStatus  = ref<any>(null);
+const analysisRunning = ref(false);
+const analysisTaskId  = ref('');
+let   pollTimer: number | undefined;
 
-    // ECharts 容器引用
-    const networkChart = ref<HTMLElement | null>(null);
-    let chartInstance: echarts.ECharts | null = null;
+const networkChart  = ref<HTMLElement | null>(null);
+let   chartInstance: echarts.ECharts | null = null;
 
-    // 过滤条件：多种相似度过滤同时生效
-    const filter = ref({
-      overall: 0.7,
-      text: 0.5,
-      image: 0.5,
-      structure: 0.5,
-      metadata: 0.5
-    });
+const filter = ref({ overall: 0.7, text: 0.5, image: 0.5, structure: 0.5, metadata: 0.5 });
 
-    const getAuthConfig = () => {
-      const token = store.state.currentUser?.token;
-      return { headers: { Authorization: `Bearer ${token}` } };
-    };
+/* ─────────────── API helpers ─────────────── */
+const authCfg = () => ({ headers: { Authorization: `Bearer ${store.state.currentUser?.token}` } });
+const parse   = (r: any) => r.data && r.data.success ? r.data.data : Promise.reject(r.data?.message);
 
-    const parseResponse = (response: any) => {
-      if (response.data && response.data.success) {
-        return response.data.data;
-      }
-      throw new Error(response.data?.message || 'Unknown error');
-    };
+/* ─────────────── 数据加载 ─────────────── */
+const loadAssignment = () => axios.get(`/api/assignments/${assignmentId}`, authCfg()).then(parse).then(d => {
+  assignment.value = d.assignment || d;
+});
+const loadSubmissions = () => axios
+    .get(`/api/assignments/${assignmentId}/submissions`, authCfg())
+    .then(parse)
+    .then(d => { submissions.value = d.submissions || d; });
 
-    const loadAssignmentDetail = async () => {
-      try {
-        const response = await axios.get(`/api/assignments/${assignmentId}`, getAuthConfig());
-        const data = parseResponse(response);
-        assignment.value = data.assignment || data;
-      } catch (error: any) {
-        console.error('Failed to load assignment detail:', error);
-        alert('Failed to load assignment detail: ' + error.message);
-      }
-    };
-
-    const loadSubmissions = async () => {
-      try {
-        const response = await axios.get(`/api/assignments/${assignmentId}/submissions`, getAuthConfig());
-        const data = parseResponse(response);
-        submissions.value = data.submissions || data;
-      } catch (error: any) {
-        console.error('Failed to load submissions:', error);
-        alert('Failed to load submissions: ' + error.message);
-      }
-    };
-
-    const startAnalysis = async () => {
-      try {
-        const response = await axios.post(`/api/analysis/${assignmentId}`, {}, getAuthConfig());
-        const data = parseResponse(response);
-        analysisTaskId.value = data.taskId;
-        analysisRunning.value = true;
-        startPolling();
-      } catch (error: any) {
-        console.error('Failed to start analysis:', error);
-        alert('Failed to start analysis: ' + error.message);
-      }
-    };
-
-    const pollAnalysisStatus = async () => {
-      try {
-        const response = await axios.get(`/api/analysis/${analysisTaskId.value}`, getAuthConfig());
-        // 假设后端返回的数据包含 submissionInfos 与 result.comparisons 以及 status
-        const data = response.data.data;
-        analysisStatus.value = data;
-        if (data.status === 'completed') {
-          analysisRunning.value = false;
-          clearInterval(pollInterval);
-          await nextTick(() => {
-            initNetworkChart();
-          });
-        }
-      } catch (error: any) {
-        console.error('Failed to load analysis status:', error);
-      }
-    };
-
-    const startPolling = () => {
-      pollInterval = window.setInterval(pollAnalysisStatus, 2000);
-    };
-
-    // 根据 submissionInfos、comparisons 和过滤条件构造网络图数据
-    const computePlagiarismNetwork = () => {
-      if (!analysisStatus.value || !analysisStatus.value.result || !analysisStatus.value.submissionInfos) {
-        return { nodes: [], links: [] };
-      }
-      const comparisons = analysisStatus.value.result.comparisons;
-      const submissionInfos = analysisStatus.value.submissionInfos;
-      // 构造文件路径到提交信息的映射
-      const fileMap = new Map();
-      submissionInfos.forEach(info => {
-        fileMap.set(info.filePath, info);
-      });
-      // 根据过滤条件过滤比较结果
-      const edges = comparisons
-          .filter(comp =>
-              comp.overallSimilarity >= filter.value.overall &&
-              comp.textSimilarity >= filter.value.text &&
-              comp.imageSimilarity >= filter.value.image &&
-              comp.structureSimilarity >= filter.value.structure &&
-              comp.metadataSimilarity >= filter.value.metadata
-          )
-          .map(comp => {
-            const sourceInfo = fileMap.get(comp.fileA);
-            const targetInfo = fileMap.get(comp.fileB);
-            if (sourceInfo && targetInfo) {
-              return {
-                source: { id: String(sourceInfo.studentId), name: sourceInfo.studentName },
-                target: { id: String(targetInfo.studentId), name: targetInfo.studentName },
-                similarity: comp.overallSimilarity,
-                details: {
-                  text: comp.textSimilarity,
-                  image: comp.imageSimilarity,
-                  structure: comp.structureSimilarity,
-                  metadata: comp.metadataSimilarity
-                }
-              };
-            }
-            return null;
-          })
-          .filter(edge => edge !== null);
-
-      // 根据 edges 去重节点（以学生 id 为 key，转换为字符串）
-      const nodeMap = new Map();
-      edges.forEach((edge: any) => {
-        nodeMap.set(edge.source.id, edge.source);
-        nodeMap.set(edge.target.id, edge.target);
-      });
-      const nodes = Array.from(nodeMap.values());
-      // 将额外信息存储到 info 字段，避免被 ECharts 内部覆盖
-      const links = edges.map((edge: any) => ({
-        source: edge.source.id,
-        target: edge.target.id,
-        value: edge.similarity,
-        info: edge
-      }));
-      return { nodes, links };
-    };
-
-    // 初始化并绘制图表
-    const initNetworkChart = () => {
-      // 如果已有实例，则移除 click 事件并销毁实例
-      if (chartInstance) {
-        chartInstance.off('click');
-        chartInstance.dispose();
-        chartInstance = null;
-      }
-      const { nodes, links } = computePlagiarismNetwork();
-      if (!networkChart.value) return;
-      chartInstance = echarts.init(networkChart.value);
-      const option = {
-        title: {
-          text: 'Plagiarism Network Graph',
-          subtext: 'Filter: 多条件生效，显示详细对比信息',
-          left: 'center'
-        },
-        tooltip: {
-          formatter: function (params: any) {
-            if (params.dataType === 'edge') {
-              const edge = params.data.info;
-              return `
-                从 <b>${edge.source.name}</b> 到 <b>${edge.target.name}</b><br/>
-                Overall: ${edge.similarity}<br/>
-                Text: ${edge.details.text}<br/>
-                Image: ${edge.details.image}<br/>
-                Structure: ${edge.details.structure}<br/>
-                Metadata: ${edge.details.metadata}
-              `;
-            } else {
-              return params.data.name;
-            }
-          }
-        },
-        series: [
-          {
-            type: 'graph',
-            layout: 'force',
-            roam: true,
-            // 移除了 edgeSymbol 配置，不显示箭头
-            label: {
-              show: true,
-              formatter: '{b}'
-            },
-            force: {
-              repulsion: 100,
-              edgeLength: [50, 200]
-            },
-            data: nodes,
-            links: links,
-            lineStyle: {
-              color: 'source',
-              curveness: 0.3
-            }
-          }
-        ]
-      };
-      chartInstance.setOption(option);
-
-      // 移除重复 click 事件后绑定点击事件
-      chartInstance.off('click');
-      chartInstance.on('click', function (params: any) {
-        if (params.dataType === 'node') {
-          const studentId = params.data.id;
-          // 查找该学生对应的提交记录（转换为字符串匹配）
-          const studentSubmissions = submissions.value.filter(s => String(s.studentId) === studentId);
-          if (!studentSubmissions || studentSubmissions.length === 0) {
-            alert('未找到对应的提交记录');
-          } else if (studentSubmissions.length === 1) {
-            downloadSubmission(studentSubmissions[0].id, studentSubmissions[0].student.name);
-          } else {
-            if (confirm('该学生存在多个提交记录，是否只下载第一个？')) {
-              downloadSubmission(studentSubmissions[0].id, studentSubmissions[0].student.name);
-            }
-          }
-        }
-      });
-    };
-
-    const goBack = () => {
-      router.push(`/teacher/course/${courseId}`);
-    };
-
-    // 修改 downloadSubmission，使用 {studentName}-{assignmentId}.docx 作为文件名
-    const downloadSubmission = async (submissionId: number, studentName: string) => {
-      try {
-        const config = {
-          ...getAuthConfig(),
-          responseType: 'blob'
-        };
-        const response = await axios.get(`/api/assignments/${submissionId}/download`, config);
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${studentName}-${assignmentId}.docx`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-      } catch (error) {
-        console.error('Failed to download submission:', error);
-        alert('下载失败');
-      }
-    };
-
-    const formatDate = (dateStr: string) => {
-      const d = new Date(dateStr);
-      return d.toLocaleString();
-    };
-
-    onMounted(() => {
-      loadAssignmentDetail();
-      loadSubmissions();
-    });
-
-    onBeforeUnmount(() => {
-      if (pollInterval) clearInterval(pollInterval);
-      if (chartInstance) chartInstance.dispose();
-    });
-
-    watch(analysisStatus, (newVal) => {
-      if (newVal && newVal.status === 'completed') {
-        nextTick(() => {
-          initNetworkChart();
-        });
-      }
-    });
-
-    return {
-      assignment,
-      submissions,
-      analysisStatus,
-      analysisRunning,
-      startAnalysis,
-      downloadSubmission,
-      goBack,
-      formatDate,
-      networkChart,
-      filter,
-      initNetworkChart
-    };
-  }
+/* ─────────────── 分析任务 ─────────────── */
+const startAnalysis = () => {
+  axios.post(`/api/analysis/${assignmentId}`, {}, authCfg()).then(parse).then(d => {
+    analysisTaskId.value = d.taskId;
+    analysisRunning.value = true;
+    pollTimer = window.setInterval(pollStatus, 2000);
+  });
 };
-</script>
+const pollStatus = () => {
+  axios.get(`/api/analysis/${analysisTaskId.value}`, authCfg()).then(r => {
+    analysisStatus.value = r.data.data;
+    if (r.data.data.status === 'completed') {
+      analysisRunning.value = false;
+      clearInterval(pollTimer);
+      nextTick(initNetworkChart);
+    }
+  });
+};
 
-<style scoped>
-img {
-  display: block;
-  margin: 0 auto;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-table th,
-table td {
-  padding: 8px;
-  text-align: left;
-  border: 1px solid #ccc;
-}
-</style>
+/* ─────────────── 图表 ─────────────── */
+const computeGraph = () => {
+  const res = analysisStatus.value;
+  if (!res?.result?.comparisons || !res.submissionInfos) return { nodes: [], links: [] };
+
+  const map  = new Map(res.submissionInfos.map((i: any) => [i.filePath, i]));
+  const edges = res.result.comparisons
+      .filter((c: any) =>
+          c.overallSimilarity >= filter.value.overall &&
+          c.textSimilarity    >= filter.value.text    &&
+          c.imageSimilarity   >= filter.value.image   &&
+          c.structureSimilarity >= filter.value.structure &&
+          c.metadataSimilarity  >= filter.value.metadata)
+      .map((c: any) => {
+        const a = map.get(c.fileA), b = map.get(c.fileB);
+        if (!(a && b)) return null;
+        return {
+          source: { id: String(a.studentId), name: a.studentName },
+          target: { id: String(b.studentId), name: b.studentName },
+          similarity: c.overallSimilarity,
+          details: { text: c.textSimilarity, image: c.imageSimilarity,
+            structure: c.structureSimilarity, metadata: c.metadataSimilarity }
+        };
+      }).filter(Boolean);
+
+  const nodeMap = new Map<string, any>();
+  edges.forEach((e: any) => { nodeMap.set(e.source.id, e.source); nodeMap.set(e.target.id, e.target); });
+
+  return {
+    nodes: Array.from(nodeMap.values()),
+    links: edges.map((e: any) => ({ source: e.source.id, target: e.target.id, value: e.similarity, info: e }))
+  };
+};
+
+const initNetworkChart = () => {
+  if (!networkChart.value) return;
+  if (chartInstance) { chartInstance.dispose(); chartInstance = null; }
+
+  const { nodes, links } = computeGraph();
+  chartInstance = echarts.init(networkChart.value);
+  chartInstance.setOption({
+    tooltip: { formatter: ({ dataType, data }: any) =>
+          dataType === 'edge'
+              ? `从 <b>${data.info.source.name}</b> 到 <b>${data.info.target.name}</b><br/>
+           Overall: ${data.value}<br/>
+           Text: ${data.info.details.text}<br/>
+           Image: ${data.info.details.image}<br/>
+           Structure: ${data.info.details.structure}<br/>
+           Metadata: ${data.info.details.metadata}`
+              : data.name
+    },
+    series: [{
+      type: 'graph', layout: 'force', roam: true,
+      label: { show: true, formatter: '{b}' },
+      force: { repulsion: 100, edgeLength: [50, 200] },
+      data: nodes, links,
+      lineStyle: { color: 'source', curveness: 0.3 }
+    }]
+  });
+  chartInstance.on('click', ({ dataType, data }: any) => {
+    if (dataType !== 'node') return;
+    const list = submissions.value.filter(s => String(s.studentId) === data.id);
+    if (!list.length) return alert('未找到对应的提交记录');
+    downloadSubmission(list[0].id, list[0].student.name);
+  });
+};
+
+/* ─────────────── 其它工具 ─────────────── */
+const downloadSubmission = (id: number, name: string) => {
+  axios.get(`/api/assignments/${id}/download`, { ...authCfg(), responseType: 'blob' })
+      .then(r => {
+        const url  = URL.createObjectURL(new Blob([r.data]));
+        const link = Object.assign(document.createElement('a'), {
+          href: url,
+          download: `${name}-${assignmentId}.docx`
+        });
+        document.body.appendChild(link); link.click(); link.remove();
+        URL.revokeObjectURL(url);
+      });
+};
+const formatDate  = (d: string) => new Date(d).toLocaleString();
+const goBack      = () => router.push(`/teacher/course/${courseId}`);
+const showGraph   = computed(() => analysisStatus.value?.status === 'completed');
+
+const statusColor = computed(() =>
+    analysisStatus.value?.status === 'completed' ? 'text-green-600'
+        : analysisStatus.value?.status === 'running' ? 'text-yellow-500'
+            : 'text-red-500');
+
+onMounted(() => { loadAssignment(); loadSubmissions(); });
+onBeforeUnmount(() => { clearInterval(pollTimer); chartInstance?.dispose(); });
+</script>
