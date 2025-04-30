@@ -82,7 +82,7 @@ export default {
       try {
         await axios.delete(`/api/users/${id}`, getAuthConfig());
         alert('User deleted successfully');
-        await await loadUsers();
+        await loadUsers();
       } catch (error) {
         console.error('Failed to delete user:', error);
         alert('Failed to delete user');

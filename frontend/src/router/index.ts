@@ -13,6 +13,7 @@ import Unauthorized from '@/views/Unauthorized.vue';
 import store from '@/store';
 import CourseManagement from "@/views/admin/CourseManagement.vue";
 import TeacherAssignmentDetail from "@/views/teacher/TeacherAssignmentDetail.vue";
+
 const routes: Array<RouteRecordRaw> = [
     {path: '/', redirect: '/login'},
     {path: '/login', name: 'Login', component: Login},
