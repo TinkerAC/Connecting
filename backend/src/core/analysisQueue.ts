@@ -1,6 +1,8 @@
 // backend/src/core/analysisQueue.ts
 import {v4 as uuidv4} from 'uuid';
-import {AnalysisResult, analyzeDocxFiles, buildPlagiarismNetwork} from './analyzer';
+import {AnalysisResult} from "./analyzer/types";
+import {buildPlagiarismNetwork} from "./analyzer/overall";
+import {analyzeDocxFiles} from "./analyzer";
 
 export interface AnalysisTask {
     id: string;

@@ -4,7 +4,9 @@ import path from 'path';
 import FormData from 'form-data';
 
 /**
- * 定义基本账号接口
+ * --------------------------------------------------
+ * 类型声明 & 常量
+ * --------------------------------------------------
  */
 interface Account {
     name: string;
@@ -13,9 +15,6 @@ interface Account {
     token: string;
 }
 
-/**
- * 定义通过 exp2 目录注册的测试用户接口
- */
 interface RegisteredUser {
     studentNumber: string;
     name: string;
@@ -24,244 +23,257 @@ interface RegisteredUser {
     folderPath: string;
 }
 
+interface Course {
+    id: number;
+    title: string;
+}
+
 const baseUrl = 'http://localhost:3000/api';
 
 /**
- * 原始注册流程：
- * 1. 注册并登录管理员（admin@zufe.edu.cn，密码：admin）
- * 2. 注册 10 个学生（邮箱如 s1@example.com）
- * 3. 注册 5 个教师（邮箱如 t1@zufe.edu.cn）
- * 4. 创建 4 门课程（包括“操作系统”），随机分配教师
- * 5. 每个学生随机报名 2 门课程
+ * --------------------------------------------------
+ * 工具函数：注册 + 登录（统一密码 123456）
+ * --------------------------------------------------
  */
-async function originalRegistrationFlow() {
-    // 1. 管理员注册及登录
-    let adminAccount: Account;
+async function registerAndLogin(
+    name: string,
+    email: string,
+    role: 'admin' | 'teacher' | 'student',
+): Promise<Account> {
+    const password = '123456';
     try {
-        await axios.post(`${baseUrl}/auth/register`, {
-            name: "Admin",
-            email: "admin@zufe.edu.cn",
-            password: "admin",
-            role: "admin"
-        });
-        console.log("注册管理员成功：admin@zufe.edu.cn");
-
-        const loginRes = await axios.post(`${baseUrl}/auth/login`, {
-            email: "admin@zufe.edu.cn",
-            password: "admin"
-        });
-        const adminData = loginRes.data.data;
-        adminAccount = {
-            name: adminData.name,
-            email: adminData.email,
-            id: adminData.id,
-            token: adminData.token
-        };
-        console.log("管理员登录成功：", adminAccount);
-    } catch (err: any) {
-        console.error("管理员注册或登录失败：", err.response?.data || err);
-        throw err;
+        await axios.post(`${baseUrl}/auth/register`, { name, email, password, role });
+    } catch (_) {
+        /* 账号已存在时直接忽略注册异常 */
     }
-
-    // 3. 注册 5 个教师（t1～t5，邮箱：t1@zufe.edu.cn 等）
-    const teacherAccounts: Account[] = [];
-    for (let i = 1; i <= 5; i++) {
-        const email = `t${i}@zufe.edu.cn`;
-        try {
-            await axios.post(`${baseUrl}/auth/register`, {
-                name: `Teacher ${i}`,
-                email,
-                password: `t${i}`,
-                role: "teacher"
-            });
-            console.log(`注册教师成功：${email}`);
-
-            const loginRes = await axios.post(`${baseUrl}/auth/login`, {
-                email,
-                password: `t${i}`
-            });
-            const data = loginRes.data.data;
-            teacherAccounts.push({
-                name: data.name,
-                email: data.email,
-                id: data.id,
-                token: data.token
-            });
-        } catch (err: any) {
-            console.error(`注册教师 ${email} 失败：`, err.response?.data || err);
-        }
-    }
-
-    // 4. 创建 4 门课程（包括“操作系统”）
-    const courseNames = ["计算机网络", "数据结构", "计算机组成原理", "操作系统"];
-    const courses: any[] = [];
-    for (const courseName of courseNames) {
-        // 随机选择一位教师作为课程负责人
-        const randomTeacher = teacherAccounts[Math.floor(Math.random() * teacherAccounts.length)];
-        try {
-            const courseRes = await axios.post(
-                `${baseUrl}/courses`,
-                {
-                    title: courseName,
-                    description: `${courseName} 描述`,
-                    teacherId: randomTeacher.id
-                },
-                {
-                    headers: {Authorization: `Bearer ${adminAccount.token}`}
-                }
-            );
-            console.log(`创建课程成功：${courseName}（负责人：${randomTeacher.email}）`);
-            // 根据后端返回数据结构可能在 data.course 或 data 中
-            const course = courseRes.data.data.course || courseRes.data.data;
-            courses.push(course);
-        } catch (err: any) {
-            console.error(`创建课程 ${courseName} 失败：`, err.response?.data || err);
-        }
-    }
-
-
-    return {
-        adminAccount,
-        teacherAccounts,
-        courses
-    };
+    const loginRes = await axios.post(`${baseUrl}/auth/login`, { email, password });
+    const d = loginRes.data.data;
+    return { name: d.name, email: d.email, id: d.id, token: d.token };
 }
 
 /**
- * 从 assets/exp2 目录中注册测试学生用户
- * 文件夹名称格式：\d{12}-(name)\(\d{12}\)
- * 构造邮箱为 学号@zufe.edu.cn，默认密码为 "123456"
+ * --------------------------------------------------
+ * 注册各类用户
+ * --------------------------------------------------
  */
-async function registerUsersFromExp2(): Promise<RegisteredUser[]> {
+export async function registerAdmin(): Promise<Account> {
+    return registerAndLogin('Admin', 'admin@zufe.edu.cn', 'admin');
+}
+
+export async function registerTeachers(count = 20): Promise<Account[]> {
+    const arr: Account[] = [];
+    for (let i = 1; i <= count; i++) {
+        arr.push(await registerAndLogin(`Teacher ${i}`, `t${i}@zufe.edu.cn`, 'teacher'));
+    }
+    return arr;
+}
+
+export async function registerStudentsFromExp2(): Promise<RegisteredUser[]> {
     const exp2Dir = path.resolve(__dirname, 'assets/exp2');
-    let folders: string[] = [];
+    let folderNames: string[] = [];
     try {
-        folders = await fs.readdir(exp2Dir);
-    } catch (err) {
-        console.error("读取 exp2 目录出错：", err);
+        folderNames = await fs.readdir(exp2Dir);
+    } catch (e) {
+        console.error('读取 exp2 目录失败：', e);
         return [];
     }
-    const registeredUsers: RegisteredUser[] = [];
-    const folderNameRegex = /^(\d{12})-(.+)\(\d{12}\)$/;
-    for (const folderName of folders) {
-        const match = folderName.match(folderNameRegex);
-        if (match) {
-            const studentNumber = match[1]; // 学号
-            const name = match[2]; // 姓名
-            const email = `${studentNumber}@zufe.edu.cn`;
-            const folderPath = path.join(exp2Dir, folderName);
-            try {
-                // 注册测试学生用户
-                await axios.post(`${baseUrl}/auth/register`, {
-                    name,
-                    email,
-                    password: "123456",
-                    role: "student"
-                });
-                console.log(`注册测试学生成功：${name}，邮箱：${email}`);
-                // 登录获取 token
-                const loginRes = await axios.post(`${baseUrl}/auth/login`, {
-                    email,
-                    password: "123456"
-                });
-                const token = loginRes.data.data.token;
-                registeredUsers.push({studentNumber, name, email, token, folderPath});
-            } catch (error: any) {
-                console.error(`注册或登录测试用户 ${name} (${email}) 失败：`, error.response?.data || error);
-            }
-        } else {
-            console.log(`文件夹名称 ${folderName} 不符合预期格式，跳过。`);
-        }
+    const reg = /^(\d{12})-(.+)\(\d{12}\)$/;
+    const students: RegisteredUser[] = [];
+    for (const name of folderNames) {
+        const m = name.match(reg);
+        if (!m) continue;
+        const [, stuNo, stuName] = m;
+        const email = `${stuNo}@zufe.edu.cn`;
+        const account = await registerAndLogin(stuName, email, 'student');
+        students.push({
+            studentNumber: stuNo,
+            name: stuName,
+            email,
+            token: account.token,
+            folderPath: path.join(exp2Dir, name),
+        });
     }
-    return registeredUsers;
+    return students;
 }
 
 /**
- * 对于每个通过 exp2 注册的测试用户，
- * 从其对应文件夹中随机选择一个 .docx 文件，
- * 然后提交到操作系统第二次作业的提交接口
- * （假定接口：POST /api/assignments/{assignmentId}/submit，支持 multipart/form-data）
+ * --------------------------------------------------
+ * 课程相关
+ * --------------------------------------------------
  */
-async function submitDocxToOSAssignment(osAssignmentId: number, users: RegisteredUser[]): Promise<void> {
-    for (const user of users) {
+export async function createCourses(admin: Account, teachers: Account[]): Promise<Course[]> {
+    const titles = [
+        '计算机网络',
+        '数据结构',
+        '计算机组成原理',
+        '操作系统',
+        '数据库系统',
+        '软件工程',
+        '编译原理',
+        '人工智能导论',
+        '机器学习',
+        '算法设计与分析',
+        '信息安全',
+        '分布式系统',
+        '程序设计语言',
+        '数据挖掘',
+        '可视化技术',
+        '人机交互',
+        '区块链技术',
+        '云计算基础',
+        '计算机图形学',
+        '自然语言处理',
+        '高等数学',
+        '线性代数',
+        '概率论与数理统计',
+        '数值分析',
+    ];
+
+    const list: Course[] = [];
+    for (const t of titles) {
+        const teacher = teachers[Math.floor(Math.random() * teachers.length)];
         try {
-            const files = await fs.readdir(user.folderPath);
-            const docxFiles = files.filter(file => file.toLowerCase().endsWith('.docx'));
-            if (docxFiles.length === 0) {
-                console.log(`在 ${user.folderPath} 中未找到 .docx 文件，跳过 ${user.name}。`);
+            const res = await axios.post(
+                `${baseUrl}/courses`,
+                { title: t, description: `${t} 课程描述`, teacherId: teacher.id },
+                { headers: { Authorization: `Bearer ${admin.token}` } },
+            );
+            const c = res.data.data?.course ?? res.data.course ?? res.data;
+            list.push({ id: c.id, title: c.title });
+            console.log(`✔ 课程创建：${t} -> ${teacher.email}`);
+        } catch (err: any) {
+            console.error(`✘ 创建课程 ${t} 失败：`, err.response?.data || err);
+        }
+    }
+    return list;
+}
+
+export async function enrollStudents(
+    students: RegisteredUser[],
+    courses: Course[],
+    perStudent = 2,
+) {
+    for (const s of students) {
+        const selected = [...courses].sort(() => Math.random() - 0.5).slice(0, perStudent);
+        for (const c of selected) {
+            try {
+                await axios.post(
+                    `${baseUrl}/enrollments`,
+                    { courseId: c.id },
+                    { headers: { Authorization: `Bearer ${s.token}` } },
+                );
+                console.log(`✔ ${s.name} 选课成功：${c.title}`);
+            } catch (err: any) {
+                const msg = err.response?.data?.error ?? '';
+                if (/exist|already|duplicate/i.test(msg)) {
+                    console.log(`ℹ ${s.name} 已选过：${c.title}`);
+                } else {
+                    console.error(`✘ ${s.name} 选课失败：${c.title}`, err.response?.data || err);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * --------------------------------------------------
+ * 作业相关
+ * --------------------------------------------------
+ */
+export async function createAssignment(
+    adminOrTeacher: Account,
+    course: Course,
+    title: string,
+    description = '',
+): Promise<number> {
+    const res = await axios.post(
+        `${baseUrl}/assignments`,
+        { title, description, courseId: course.id },
+        { headers: { Authorization: `Bearer ${adminOrTeacher.token}` } },
+    );
+    const data = res.data.data?.assignment ?? res.data.assignment ?? res.data;
+    if (!data?.id) throw new Error('assignment 解析失败');
+    return data.id;
+}
+
+/**
+ * 为每门课程随机布置 1-3 次作业，命名：<课程名> 第 n 次作业
+ */
+export async function createAssignmentsForCourses(
+    admin: Account,
+    courses: Course[],
+): Promise<Record<number, number[]>> {
+    const map: Record<number, number[]> = {};
+    for (const course of courses) {
+        const times = Math.floor(Math.random() * 3) + 1; // 1-3 次
+        map[course.id] = [];
+        for (let i = 1; i <= times; i++) {
+            const title = `${course.title} 第${i}次作业`;
+            try {
+                const aid = await createAssignment(admin, course, title, `${title} 描述`);
+                map[course.id].push(aid);
+                console.log(`✔ 创建作业：${title}`);
+            } catch (err) {
+                console.error(`✘ 创建作业 ${title} 失败：`, (err as any).response?.data || err);
+            }
+        }
+    }
+    return map;
+}
+
+export async function submitAssignments(
+    assignmentId: number,
+    students: RegisteredUser[],
+) {
+    for (const s of students) {
+        try {
+            const files = await fs.readdir(s.folderPath);
+            const docs = files.filter((f) => f.toLowerCase().endsWith('.docx'));
+            if (!docs.length) {
+                console.log(`ℹ ${s.name} 无 .docx，跳过`);
                 continue;
             }
-            const randomFile = docxFiles[Math.floor(Math.random() * docxFiles.length)];
-            const filePath = path.join(user.folderPath, randomFile);
-            console.log(`用户 ${user.name} 将提交文件：${filePath}`);
+            const file = docs[Math.floor(Math.random() * docs.length)];
+            const buffer = await fs.readFile(path.join(s.folderPath, file));
             const form = new FormData();
-            const fileContent = await fs.readFile(filePath);
-            form.append('file', fileContent, randomFile);
-            const submissionUrl = `${baseUrl}/assignments/${osAssignmentId}/submit`
-            const headers = {
-                ...form.getHeaders(),
-                Authorization: `Bearer ${user.token}`
-            };
-            const res = await axios.post(submissionUrl, form, {headers});
-            console.log(`用户 ${user.name} 文件提交成功：`, res.data);
-        } catch (error: any) {
-            console.error(`用户 ${user.name} 文件提交失败：`, error.response?.data || error);
+            form.append('file', buffer, file);
+            await axios.post(`${baseUrl}/assignments/${assignmentId}/submit`, form, {
+                headers: { ...form.getHeaders(), Authorization: `Bearer ${s.token}` },
+            });
+            console.log(`✔ ${s.name} 提交：${file}`);
+        } catch (err: any) {
+            console.error(`✘ ${s.name} 提交失败：`, err.response?.data || err);
         }
     }
 }
 
 /**
- * 整体测试流程：
- * 1. 执行原始注册流程（管理员、教师、学生注册、课程创建、学生选课）
- * 2. 从 assets/exp2 注册测试用户
- * 3. 获取操作系统课程，并创建操作系统第二次作业（由管理员创建）
- * 4. 每个 exp2 测试用户提交随机 .docx 文件到该作业
+ * --------------------------------------------------
+ * 主流程
+ * --------------------------------------------------
  */
-async function testFlowFull() {
-    // 1. 原始注册流程
-    const {adminAccount, teacherAccounts, courses} = await originalRegistrationFlow();
+export async function main() {
+    const admin = await registerAdmin();
+    const teachers = await registerTeachers();
+    const students = await registerStudentsFromExp2();
 
-    // 2. 从 assets/exp2 注册测试用户
-    const testUsers = await registerUsersFromExp2();
-    console.log(`共注册 ${testUsers.length} 个 exp2 测试用户。`);
+    const courses = await createCourses(admin, teachers);
+    await enrollStudents(students, courses, 2);
 
-    // 3. 获取操作系统课程（假定课程标题为 “操作系统”）
-    // 4. 创建操作系统第二次作业
-    let osAssignmentId: number;
+    const assignmentMap = await createAssignmentsForCourses(admin, courses);
 
-    try {
-        const createRes = await axios.post(
-            `${baseUrl}/assignments`,
-            {
-                title: "操作系统作业2",
-                description: "操作系统第二次作业测试",
-                courseId: 4
-            },
-            {
-                headers: {Authorization: `Bearer ${adminAccount.token}`}
-            }
-        );
-        console.log(createRes.data);
-        // 根据返回的数据结构提取 assignment 对象
-        const assignment = createRes.data.data ? createRes.data.data.assignment : createRes.data.assignment;
-        osAssignmentId = assignment.id;
-        console.log(`创建操作系统第二次作业成功，作业ID：${osAssignmentId}`);
-    } catch (error: any) {
-        console.error("创建操作系统第二次作业失败：", error.response?.data || error);
-        return;
+    // 以“操作系统”第二次作业为示例进行文件提交（若存在）
+    const osCourse = courses.find((c) => c.title === '操作系统');
+    if (osCourse && assignmentMap[osCourse.id]?.length >= 2) {
+        await submitAssignments(assignmentMap[osCourse.id][1], students);
     }
 
-    // 5. 每个 exp2 测试用户提交随机 .docx 文件到操作系统第二次作业
-    await submitDocxToOSAssignment(osAssignmentId, testUsers);
-
-    console.log("整体测试流程执行完成");
+    console.log('\n🎉 主流程结束');
 }
 
-// 独立执行整体测试流程
-(async () => {
-    try {
-        await testFlowFull();
-    } catch (error) {
-        console.error("整体测试流程执行失败：", error);
-    }
-})();
+if (require.main === module) {
+    main().catch((e) => {
+        console.error('流程异常终止：', e);
+        process.exit(1);
+    });
+}

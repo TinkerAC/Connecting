@@ -1,14 +1,14 @@
-import { Router } from 'express';
+import {Router} from 'express';
 import {
     createCourse,
-    getCourses,
-    getCourseById,
-    updateCourse,
     deleteCourse,
-    getCourseStudents
+    getCourseById,
+    getCourses,
+    getCourseStudents,
+    updateCourse
 } from '../controllers/courseController';
-import { authMiddleware } from '../middleware/auth';
-import { getAssignments } from '../controllers/assignmentController';
+import {authMiddleware} from '../middleware/auth';
+import {getAssignments} from '../controllers/assignmentController';
 
 const router = Router();
 

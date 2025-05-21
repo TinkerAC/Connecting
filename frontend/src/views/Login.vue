@@ -1,13 +1,9 @@
-// Updated Login.vue and Register.vue with TailwindCSS styling and animated gradient background for the Connectiing project
-
-// ===============================
-// file: frontend/src/views/Login.vue
-// ===============================
 <template>
   <div class="relative min-h-screen bg-gray-900 flex items-center justify-center overflow-hidden">
-    <!-- Animated gradient background circles -->
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full filter blur-3xl opacity-40 animate-blob"></div>
-    <div class="absolute -bottom-32 -right-20 w-80 h-80 bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-500 rounded-full filter blur-2xl opacity-30 animate-blob animation-delay-4000"></div>
+    <div
+        class="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full filter blur-3xl opacity-40 animate-blob"></div>
+    <div
+        class="absolute -bottom-32 -right-20 w-80 h-80 bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-500 rounded-full filter blur-2xl opacity-30 animate-blob animation-delay-4000"></div>
 
     <!-- Card -->
     <div class="w-full max-w-md px-8 py-10 bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20">
@@ -58,10 +54,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import {ref} from 'vue';
+import {useRouter} from 'vue-router';
 import axios from 'axios';
-import { useStore } from 'vuex';
+import {useStore} from 'vuex';
 
 const email = ref('');
 const password = ref('');
@@ -75,12 +71,12 @@ const login = async () => {
         email: email.value,
         password: password.value,
       });
-      const { token, role, name } = response.data.data;
+      const {token, role, name} = response.data.data;
       const normalizedRole = role.trim().toLowerCase();
-      store.commit('setCurrentUser', { email: email.value, name, role: normalizedRole, token });
+      store.commit('setCurrentUser', {email: email.value, name, role: normalizedRole, token});
       localStorage.setItem(
           'currentUser',
-          JSON.stringify({ email: email.value, name, role: normalizedRole, token }),
+          JSON.stringify({email: email.value, name, role: normalizedRole, token}),
       );
       if (normalizedRole === 'teacher') await router.push('/teacher');
       else if (normalizedRole === 'student') await router.push('/student');
@@ -95,13 +91,21 @@ const login = async () => {
 
 <style scoped>
 @keyframes blob {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
-  33%      { transform: translate(30px, -50px) scale(1.1); }
-  66%      { transform: translate(-20px, 20px) scale(0.9); }
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
 }
+
 .animate-blob {
   animation: blob 18s infinite ease-in-out;
 }
+
 .animation-delay-4000 {
   animation-delay: 4s;
 }
