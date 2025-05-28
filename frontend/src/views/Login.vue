@@ -1,16 +1,14 @@
+// file: frontend/src/views/Login.vue
 <template>
   <div class="relative min-h-screen bg-gray-900 flex items-center justify-center overflow-hidden">
     <div
-        class="absolute -top-40 -left-40 w-96 h-96 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full filter blur-3xl opacity-40 animate-blob"></div>
+        class="absolute -top-1/2 -left-1/4 w-[60rem] h-[60rem] bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full filter blur-3xl opacity-30 animate-blob-slow"></div>
     <div
-        class="absolute -bottom-32 -right-20 w-80 h-80 bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-500 rounded-full filter blur-2xl opacity-30 animate-blob animation-delay-4000"></div>
-
-    <!-- Card -->
-    <div class="w-full max-w-md px-8 py-10 bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20">
+        class="absolute -bottom-1/2 -right-1/4 w-[50rem] h-[50rem] bg-gradient-to-br from-emerald-400 via-cyan-400 to-sky-500 rounded-full filter blur-3xl opacity-20 animate-blob-slow animation-delay-5000"></div>
+    <div class="w-full max-w-md px-8 py-10 bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 z-10">
       <h1 class="text-3xl font-bold text-center text-white mb-8 select-none">Connecting 登录</h1>
 
       <form @submit.prevent="login" class="space-y-6">
-        <!-- Email -->
         <div>
           <label for="email" class="block text-sm font-medium text-gray-200 mb-1">邮箱</label>
           <input
@@ -18,12 +16,10 @@
               id="email"
               v-model="email"
               required
-              placeholder="you@example.com"
               class="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
 
-        <!-- Password -->
         <div>
           <label for="password" class="block text-sm font-medium text-gray-200 mb-1">密码</label>
           <input
@@ -31,12 +27,10 @@
               id="password"
               v-model="password"
               required
-              placeholder="******"
               class="w-full px-4 py-2 rounded-lg bg-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
 
-        <!-- Submit -->
         <button
             type="submit"
             class="w-full py-2 font-semibold rounded-lg bg-indigo-500 hover:bg-indigo-600 active:scale-95 transition text-white shadow-lg shadow-indigo-500/30"
@@ -54,6 +48,7 @@
 </template>
 
 <script lang="ts" setup>
+// Script 内容保持不变
 import {ref} from 'vue';
 import {useRouter} from 'vue-router';
 import axios from 'axios';
@@ -90,6 +85,33 @@ const login = async () => {
 </script>
 
 <style scoped>
+/* 定义新的动画名称或修改现有的 (如果希望) */
+@keyframes blob-slow-animation { /* 从 'blob' 重命名以避免冲突或用于区分 */
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(20px, -30px) scale(1.05); /* 减小位移, 轻微减小缩放 */
+  }
+  66% {
+    transform: translate(-15px, 15px) scale(0.95); /* 减小位移, 轻微减小缩放 */
+  }
+}
+
+.animate-blob-slow { /* 新的类名用于更慢的动画 */
+  animation: blob-slow-animation 30s infinite ease-in-out; /* 增加动画时长至30秒 (原为18秒) */
+}
+
+/* 保留原始的 animation-delay-4000 类, 因为它足够通用 */
+/* .animation-delay-4000 应用于原始的第二个色块。新的延时是5000，用于修改后的色块 */
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+.animation-delay-5000 { /* 为新的延时创建特定类名, 或者如果愿意, 可以使用内联样式 */
+  animation-delay: 5s;
+}
+
+
 @keyframes blob {
   0%, 100% {
     transform: translate(0px, 0px) scale(1);
@@ -106,7 +128,4 @@ const login = async () => {
   animation: blob 18s infinite ease-in-out;
 }
 
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
 </style>

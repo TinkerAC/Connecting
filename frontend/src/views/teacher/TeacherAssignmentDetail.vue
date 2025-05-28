@@ -4,9 +4,10 @@
     <template #content>
       <!-- 全局加载动画 -->
       <div v-if="loading" class="flex justify-center items-center py-14">
-        <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+        <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+             viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
         </svg>
       </div>
 
@@ -31,7 +32,7 @@
             <div v-if="analysisStatus.progress !== undefined"
                  class="w-full bg-gray-200 h-2 rounded overflow-hidden">
               <div class="h-full bg-indigo-500 transition-all"
-                   :style="{ width: analysisStatus.progress + '%' }" />
+                   :style="{ width: analysisStatus.progress + '%' }"/>
             </div>
           </template>
 
@@ -65,7 +66,7 @@
                      :id="k"
                      v-model.number="filter[k]"
                      step="0.01" min="0" max="1"
-                     class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400" />
+                     class="px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-400"/>
             </div>
           </div>
           <button @click="applyManualFilter"
@@ -101,7 +102,7 @@
         <!-- 抄袭关系图 -->
         <section v-if="showGraph" class="bg-white dark:bg-gray-800 rounded-xl shadow p-6">
           <h3 class="text-lg font-medium mb-4">抄袭关系网络图</h3>
-          <div ref="networkChart" class="w-full h-[500px]" />
+          <div ref="networkChart" class="w-full h-[500px]"/>
         </section>
 
         <!-- 提交表 -->
@@ -150,9 +151,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, nextTick, onMounted, onBeforeUnmount, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { useStore } from 'vuex';
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
+import {useStore} from 'vuex';
 import axios from 'axios';
 import * as echarts from 'echarts';
 import Panel from "@/components/Layout/Panel.vue";
@@ -161,35 +162,35 @@ const route = useRoute();
 const router = useRouter();
 const store = useStore();
 const assignmentId = Number(route.params.assignmentId);
-const courseId     = Number(route.params.courseId);
+const courseId = Number(route.params.courseId);
 
 /* ─────────────── 状态 ─────────────── */
-const loading          = ref(true);
-const assignment       = ref<any>(null);
-const submissions      = ref<any[]>([]);
-const analysisStatus   = ref<any>(null);
-const analysisRunning  = ref(false);
-const analysisTaskId   = ref('');
-let   pollTimer: number | undefined;
+const loading = ref(true);
+const assignment = ref<any>(null);
+const submissions = ref<any[]>([]);
+const analysisStatus = ref<any>(null);
+const analysisRunning = ref(false);
+const analysisTaskId = ref('');
+let pollTimer: number | undefined;
 
-const networkChart  = ref<HTMLElement | null>(null);
-let   chartInstance: echarts.ECharts | null = null;
+const networkChart = ref<HTMLElement | null>(null);
+let chartInstance: echarts.ECharts | null = null;
 
 // 默认阈值
-const filter = ref({ overall: 0.7, text: 0.5, image: 0.5, structure: 0.5, metadata: 0.5 });
+const filter = ref({overall: 0.7, text: 0.5, image: 0.5, structure: 0.5, metadata: 0.5});
 
 /* 预设：严格/宽松仅根据 Overall 过滤；自定义可多维度调节 */
 const presets = [
-  { key: 'strict',  name: '严格',  overall: 0.8 },
-  { key: 'lenient', name: '宽松',  overall: 0.5 },
-  { key: 'custom',  name: '自定义', overall: 0.6, text: 0.5, image: 0.5, structure: 0.5, metadata: 0.5 }
+  {key: 'strict', name: '严格', overall: 0.8},
+  {key: 'lenient', name: '宽松', overall: 0.5},
+  {key: 'custom', name: '自定义', overall: 0.6, text: 0.5, image: 0.5, structure: 0.5, metadata: 0.5}
 ] as const;
 const selectedPreset = ref<typeof presets[number]['key']>('strict');
 
 /* ─────────────── 计算可疑提交 ─────────────── */
 const suspicious = computed(() => {
   if (!analysisStatus.value?.result?.comparisons) return [];
-  const { nodes, links } = computeGraph();
+  const {nodes, links} = computeGraph();
   if (!nodes.length) return [];
 
   // 取每个节点连接边上的最高 overall 相似度，转换为百分比
@@ -211,8 +212,8 @@ const suspiciousRate = computed(() => submissions.value.length
     : 0);
 
 /* ─────────────── API helpers ─────────────── */
-const authCfg = () => ({ headers: { Authorization: `Bearer ${store.state.currentUser?.token}` } });
-const parse   = (r: any) => r.data && r.data.success ? r.data.data : Promise.reject(r.data?.message);
+const authCfg = () => ({headers: {Authorization: `Bearer ${store.state.currentUser?.token}`}});
+const parse = (r: any) => r.data && r.data.success ? r.data.data : Promise.reject(r.data?.message);
 
 /* ─────────────── 数据加载 ─────────────── */
 const loadAssignment = () => axios.get(`/api/assignments/${assignmentId}`, authCfg()).then(parse).then(d => {
@@ -221,7 +222,9 @@ const loadAssignment = () => axios.get(`/api/assignments/${assignmentId}`, authC
 const loadSubmissions = () => axios
     .get(`/api/assignments/${assignmentId}/submissions`, authCfg())
     .then(parse)
-    .then(d => { submissions.value = d.submissions || d; });
+    .then(d => {
+      submissions.value = d.submissions || d;
+    });
 
 /* ─────────────── 分析任务 ─────────────── */
 const startAnalysis = () => {
@@ -237,7 +240,9 @@ const pollStatus = () => {
     if (r.data.data.status === 'completed') {
       analysisRunning.value = false;
       clearInterval(pollTimer);
-      nextTick(() => { initNetworkChart(); });
+      nextTick(() => {
+        initNetworkChart();
+      });
     }
   });
 };
@@ -245,49 +250,58 @@ const pollStatus = () => {
 /* ─────────────── 图表 ─────────────── */
 const computeGraph = () => {
   const res = analysisStatus.value;
-  if (!res?.result?.comparisons || !res.submissionInfos) return { nodes: [], links: [] };
+  if (!res?.result?.comparisons || !res.submissionInfos) return {nodes: [], links: []};
 
   const onlyOverall = ['strict', 'lenient'].includes(selectedPreset.value);
-  const map  = new Map(res.submissionInfos.map((i: any) => [i.filePath, i]));
+  const map = new Map(res.submissionInfos.map((i: any) => [i.filePath, i]));
   const edges = res.result.comparisons
       .filter((c: any) => {
         const basic = c.overallSimilarity >= filter.value.overall;
         if (!basic) return false;
         if (onlyOverall) return true;
-        return c.textSimilarity      >= filter.value.text      &&
-            c.imageSimilarity     >= filter.value.image     &&
+        return c.textSimilarity >= filter.value.text &&
+            c.imageSimilarity >= filter.value.image &&
             c.structureSimilarity >= filter.value.structure &&
-            c.metadataSimilarity  >= filter.value.metadata;
+            c.metadataSimilarity >= filter.value.metadata;
       })
       .map((c: any) => {
         const a = map.get(c.fileA), b = map.get(c.fileB);
         if (!(a && b)) return null;
         return {
-          source: { id: String(a.studentId), name: a.studentName },
-          target: { id: String(b.studentId), name: b.studentName },
+          source: {id: String(a.studentId), name: a.studentName},
+          target: {id: String(b.studentId), name: b.studentName},
           similarity: c.overallSimilarity,
-          details: { text: c.textSimilarity, image: c.imageSimilarity,
-            structure: c.structureSimilarity, metadata: c.metadataSimilarity }
+          details: {
+            text: c.textSimilarity, image: c.imageSimilarity,
+            structure: c.structureSimilarity, metadata: c.metadataSimilarity
+          }
         };
       }).filter(Boolean);
 
   const nodeMap = new Map<string, any>();
-  edges.forEach((e: any) => { nodeMap.set(e.source.id, e.source); nodeMap.set(e.target.id, e.target); });
+  edges.forEach((e: any) => {
+    nodeMap.set(e.source.id, e.source);
+    nodeMap.set(e.target.id, e.target);
+  });
 
   return {
     nodes: Array.from(nodeMap.values()),
-    links: edges.map((e: any) => ({ source: e.source.id, target: e.target.id, value: e.similarity, info: e }))
+    links: edges.map((e: any) => ({source: e.source.id, target: e.target.id, value: e.similarity, info: e}))
   };
 };
 
 const initNetworkChart = () => {
   if (!networkChart.value) return;
-  if (chartInstance) { chartInstance.dispose(); chartInstance = null; }
+  if (chartInstance) {
+    chartInstance.dispose();
+    chartInstance = null;
+  }
 
-  const { nodes, links } = computeGraph();
+  const {nodes, links} = computeGraph();
   chartInstance = echarts.init(networkChart.value);
   chartInstance.setOption({
-    tooltip: { formatter: ({ dataType, data }: any) =>
+    tooltip: {
+      formatter: ({dataType, data}: any) =>
           dataType === 'edge'
               ? `从 <b>${data.info.source.name}</b> 到 <b>${data.info.target.name}</b><br/>
            Overall: ${(data.value * 100).toFixed(1)}%<br/>
@@ -299,13 +313,13 @@ const initNetworkChart = () => {
     },
     series: [{
       type: 'graph', layout: 'force', roam: true,
-      label: { show: true, formatter: '{b}' },
-      force: { repulsion: 100, edgeLength: [50, 200] },
+      label: {show: true, formatter: '{b}'},
+      force: {repulsion: 100, edgeLength: [50, 200]},
       data: nodes, links,
-      lineStyle: { color: 'source', curveness: 0.3 }
+      lineStyle: {color: 'source', curveness: 0.3}
     }]
   });
-  chartInstance.on('click', ({ dataType, data }: any) => {
+  chartInstance.on('click', ({dataType, data}: any) => {
     if (dataType !== 'node') return;
     const list = submissions.value.filter(s => String(s.studentId) === data.id);
     if (!list.length) return alert('未找到对应的提交记录');
@@ -331,20 +345,22 @@ const applyManualFilter = () => {
 
 /* ─────────────── 其它工具 ─────────────── */
 const downloadSubmission = (id: number, name: string) => {
-  axios.get(`/api/assignments/${id}/download`, { ...authCfg(), responseType: 'blob' })
+  axios.get(`/api/assignments/${id}/download`, {...authCfg(), responseType: 'blob'})
       .then(r => {
-        const url  = URL.createObjectURL(new Blob([r.data]));
+        const url = URL.createObjectURL(new Blob([r.data]));
         const link = Object.assign(document.createElement('a'), {
           href: url,
           download: `${name}-${assignmentId}.docx`
         });
-        document.body.appendChild(link); link.click(); link.remove();
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
         URL.revokeObjectURL(url);
       });
 };
-const formatDate  = (d: string) => new Date(d).toLocaleString();
-const goBack      = () => router.push(`/teacher/course/${courseId}`);
-const showGraph   = computed(() => analysisStatus.value?.status === 'completed');
+const formatDate = (d: string) => new Date(d).toLocaleString();
+const goBack = () => router.push(`/teacher/course/${courseId}`);
+const showGraph = computed(() => analysisStatus.value?.status === 'completed');
 
 const statusColor = computed(() =>
     analysisStatus.value?.status === 'completed' ? 'text-green-600'
@@ -364,7 +380,10 @@ onMounted(async () => {
 
 watch(selectedPreset, applyPreset);
 
-onBeforeUnmount(() => { clearInterval(pollTimer); chartInstance?.dispose(); });
+onBeforeUnmount(() => {
+  clearInterval(pollTimer);
+  chartInstance?.dispose();
+});
 </script>
 
 <style scoped>

@@ -2,10 +2,10 @@ import fs from 'fs';
 import mammoth from 'mammoth';
 import AdmZip from 'adm-zip';
 
-import { DocxAnalysis } from './types';
-import {extractDocumentStructure} from "./stucture";
-import {extractImagesHash} from "./image";
-import {extractMetadata} from "./metadata";
+import { DocxAnalysis } from '../core/Interfaces';
+import {extractDocumentStructure} from "../core/analyzer/stucture";
+import {extractImagesHash} from "../core/analyzer/image";
+import {extractMetadata} from "../core/analyzer/metadata";
 
 
 /* 解析单个 DOCX */

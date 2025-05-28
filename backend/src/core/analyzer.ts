@@ -1,11 +1,11 @@
 import fs from 'fs';
-import {AnalysisResult, DocxAnalysis, PairwiseComparison} from "./analyzer/types";
-import {parseDocx} from "./analyzer/parseDocx";
+import {AnalysisResult, DocxAnalysis, PairwiseComparison} from "./Interfaces";
+import {parseDocx} from "../utils/parseDocx";
 import {calculateTextSimilarity} from "./analyzer/text";
 import {calculateStructureSimilarity} from "./analyzer/stucture";
 import {calculateImageSimilarity} from "./analyzer/image";
 import {calculateMetadataSimilarity} from "./analyzer/metadata";
-import {buildPlagiarismNetwork, calculateOverallSimilarity} from "./analyzer/overall";
+import {buildPlagiarismNetwork, calculateOverallSimilarity} from "./overall";
 
 
 /* 主分析流程 */

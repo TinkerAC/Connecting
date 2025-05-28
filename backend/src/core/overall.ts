@@ -1,7 +1,7 @@
 
 
 /* 综合相似度 */
-import {PairwiseComparison} from "./types";
+import {PairwiseComparison} from "./Interfaces";
 
 export function calculateOverallSimilarity(text: number, image: number, structure: number, meta: number) {
     const w = {text: 0.3, image: 0.4, structure: 0.2, metadata: 0.1};
