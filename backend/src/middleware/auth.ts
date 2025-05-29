@@ -1,8 +1,9 @@
 // backend/src/middleware/auth.ts
 import {NextFunction, Request, Response} from 'express';
 import jwt from 'jsonwebtoken';
+import {config} from "../utils/loadConfig";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
+const JWT_SECRET = config.jwt_secret
 
 /**
  * authMiddleware：返回一个中间件函数，只有当 token 中解析的角色在 allowedRoles 内时才允许访问

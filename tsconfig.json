@@ -1,6 +1,11 @@
 // tsconfig.json  (根)
 {
   "files": [],
+
+
+
+
+
   "references": [
     { "path": "frontend" },
     { "path": "backend" }

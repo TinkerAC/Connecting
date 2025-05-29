@@ -3,8 +3,10 @@ import {NextFunction, Request, RequestHandler, Response} from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {User} from "../models";
+import {config} from "../utils/loadConfig";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
+const JWT_SECRET = config.jwt_secret
+
 
 /**
  * 定义 API 响应的接口类型

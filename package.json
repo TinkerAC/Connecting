@@ -4,7 +4,8 @@
   "scripts": {
     "dev:backend": "cd backend && pnpm run dev",
     "dev:frontend": "cd frontend && pnpm run dev",
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\""
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "dev2": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
   },
   "devDependencies": {
     "concurrently": "^8.0.1"

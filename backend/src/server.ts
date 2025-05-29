@@ -2,12 +2,13 @@
 
 
 import app from './app';
-import { sequelize } from './models/index';
+import {sequelize} from './models/index';
+import {config} from "./utils/loadConfig";
 
-const PORT = process.env.PORT || 3000;
+const PORT = config.app.port || 3000
 
 sequelize
-    .sync({ force: false })
+    .sync({force: false})
     .then(() => {
         console.log('Database synced successfully');
         app.listen(PORT, () => {

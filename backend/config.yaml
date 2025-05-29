@@ -1,12 +1,14 @@
 
+#后端服务运行的端口
 app:
   port: 3000
-  debug: true
+
 #用于签名
 jwt_secret:
   your_secret
 
-default_weights:
+#各个维度的相似度在总相似度时候的默认权重
+weights:
   text: 0.3
   image: 0.4
   structure: 0.2
