@@ -1,0 +1,13 @@
+
+app:
+  port: 3000
+  debug: true
+#用于签名
+jwt_secret:
+  your_secret
+
+default_weights:
+  text: 0.3
+  image: 0.4
+  structure: 0.2
+  metadata: 0.1

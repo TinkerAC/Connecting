@@ -1,19 +1,33 @@
+// frontend/tsconfig.json
 {
   "compilerOptions": {
+    /* 基础编译选项 */
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "node",
     "strict": true,
     "jsx": "preserve",
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["ESNext", "DOM"],
-    "baseUrl": ".",
+
+    /* 让 TS 也认识 Vite 和 Node 全局类型 */
+    "types": ["vite/client", "node"],
+
+    /* ----- 关键：路径别名 ----- */
+    "baseUrl": ".",          // ① 从 frontend/src 开始解析
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]            // ② @/foo → frontend/src/foo
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+
+  /* TS 要检查的文件 */
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "vite.config.ts"
+  ]
 }

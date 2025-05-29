@@ -1,17 +1,34 @@
+// backend/tsconfig.json
 {
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "src",
+    "outDir": "dist",
     "strict": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "types": ["node", "express"]
+    "types": [
+      "node",
+      "express"
+    ],
+    /* ----- 关键：路径别名 ----- */
+    "baseUrl": ".",
+    // ① 从 backend/src 开始解析
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+      // ② @/foo → backend/src/foo
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

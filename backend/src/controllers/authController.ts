@@ -1,8 +1,8 @@
 // backend/src/controllers/authController.ts
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { User } from '../models';
+import {NextFunction, Request, RequestHandler, Response} from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import {User} from "../models";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_key';
 
@@ -30,7 +30,7 @@ export const sendResponse = <T = any>(
     message: string,
     data: T | null = null
 ): Response<any> => {
-    return res.status(status).json({ success, message, data });
+    return res.status(status).json({success, message, data});
 };
 
 /**
@@ -38,7 +38,7 @@ export const sendResponse = <T = any>(
  */
 export const register: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { name, email, password, role } = req.body;
+        const {name, email, password, role} = req.body;
         // 验证必填字段
         if (!name || !email || !password || !role) {
             sendResponse(res, 400, false, '请提供姓名、邮箱、密码和角色。');
@@ -51,7 +51,7 @@ export const register: RequestHandler = async (req: Request, res: Response, next
         }
 
         // 检查邮箱是否已存在
-        const existingUser = await User.findOne({ where: { email } });
+        const existingUser = await User.findOne({where: {email}});
         if (existingUser) {
             sendResponse(res, 400, false, '邮箱已被注册。');
             return;
@@ -62,8 +62,8 @@ export const register: RequestHandler = async (req: Request, res: Response, next
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // 创建用户
-        const user = await User.create({ name, email, password: hashedPassword, role });
-        sendResponse(res, 201, true, '注册成功。', { userId: user.id });
+        const user = await User.create({name, email, password: hashedPassword, role});
+        sendResponse(res, 201, true, '注册成功。', {userId: user.id});
         return;
     } catch (error) {
         console.error('注册错误:', error);
@@ -77,13 +77,13 @@ export const register: RequestHandler = async (req: Request, res: Response, next
  */
 export const login: RequestHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-        const { email, password } = req.body;
+        const {email, password} = req.body;
         if (!email || !password) {
             sendResponse(res, 400, false, '请提供邮箱和密码。');
             return;
         }
 
-        const user = await User.findOne({ where: { email } });
+        const user = await User.findOne({where: {email}});
         if (!user) {
             sendResponse(res, 400, false, '用户不存在。');
             return;
@@ -97,9 +97,9 @@ export const login: RequestHandler = async (req: Request, res: Response, next: N
 
         // 登录成功后生成 JWT，1 小时后过期
         const token = jwt.sign(
-            { id: user.id, name: user.name, email: user.email, role: user.role },
+            {id: user.id, name: user.name, email: user.email, role: user.role},
             JWT_SECRET,
-            { expiresIn: '1h' }
+            {expiresIn: '1h'}
         );
 
         sendResponse(res, 200, true, '登录成功。', {
