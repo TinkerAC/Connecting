@@ -13,3 +13,4 @@ yarn-error.log*
 
 # exclude all dist folders
 **/dist
+/backend/database.sqlite
