@@ -2,8 +2,8 @@
 import {NextFunction, Request, RequestHandler, Response} from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {User} from "../models";
-import {config} from "../utils/loadConfig";
+import {User} from "@bsrc/models";
+import {config} from "@bsrc/utils/loadConfig";
 
 const JWT_SECRET = config.jwt_secret
 

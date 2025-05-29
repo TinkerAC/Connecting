@@ -33,7 +33,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import axios from 'axios';
-import Panel from '@/components/Layout/Panel.vue';
+import Panel from '@fsrc/components/Layout/Panel.vue';
 
 const courses = ref<any[]>([]);
 const joinCourseId = ref<number | null>(null);

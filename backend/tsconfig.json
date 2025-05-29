@@ -15,7 +15,15 @@
       "node",
       "express"
     ],
-
+    /* ----- 关键：路径别名 ----- */
+    "baseUrl": "src",
+    // ① 从 backend/src 开始解析
+    "paths": {
+      "@bsrc/*": [
+        "*"
+      ]
+      // ② @/foo → backend/src/foo
+    }
   },
   "include": [
     "src/**/*"

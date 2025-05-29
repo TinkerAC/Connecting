@@ -1,18 +1,18 @@
 // frontend/src/router/index.ts
 import {createRouter, createWebHistory, RouteRecordRaw} from 'vue-router';
-import Login from '@/views/Login.vue';
-import Register from '@/views/Register.vue';
-import TeacherDashboard from '@/views/teacher/TeacherDashboard.vue';
-import StudentDashboard from '@/views/student/StudentDashboard.vue';
-import AdminDashboard from '@/views/admin/AdminDashboard.vue';
-import TeacherCourse from '@/views/teacher/TeacherCourse.vue';
-import TeacherCourseDetail from '@/views/teacher/TeacherCourseDetail.vue';
-import StudentCourse from '@/views/student/StudentCourse.vue';
-import StudentCourseDetail from '@/views/student/StudentCourseDetail.vue';
-import Unauthorized from '@/views/Unauthorized.vue';
-import store from '@/store';
-import CourseManagement from "@/views/admin/CourseManagement.vue";
-import TeacherAssignmentDetail from "@/views/teacher/TeacherAssignmentDetail.vue";
+import Login from '@fsrc/views/Login.vue';
+import Register from '@fsrc/views/Register.vue';
+import TeacherDashboard from '@fsrc/views/teacher/TeacherDashboard.vue';
+import StudentDashboard from '@fsrc/views/student/StudentDashboard.vue';
+import AdminDashboard from '@fsrc/views/admin/AdminDashboard.vue';
+import TeacherCourse from '@fsrc/views/teacher/TeacherCourse.vue';
+import TeacherCourseDetail from '@fsrc/views/teacher/TeacherCourseDetail.vue';
+import StudentCourse from '@fsrc/views/student/StudentCourse.vue';
+import StudentCourseDetail from '@fsrc/views/student/StudentCourseDetail.vue';
+import Unauthorized from '@fsrc/views/Unauthorized.vue';
+import store from '@fsrc/store';
+import CourseManagement from "@fsrc/views/admin/CourseManagement.vue";
+import TeacherAssignmentDetail from "@fsrc/views/teacher/TeacherAssignmentDetail.vue";
 
 const routes: Array<RouteRecordRaw> = [
     {path: '/', redirect: '/login'},

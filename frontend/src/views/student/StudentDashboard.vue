@@ -42,7 +42,7 @@ import { ref, onMounted, defineComponent, h } from 'vue';
 import * as echarts from 'echarts';
 import axios from 'axios';
 import { useStore } from 'vuex';
-import Panel from '@/components/Layout/Panel.vue';
+import Panel from '@fsrc/components/Layout/Panel.vue';
 import { ClipboardList, BookOpen, AlertCircle } from 'lucide-vue-next';
 
 /* ---------------- MetricCard ---------------- */

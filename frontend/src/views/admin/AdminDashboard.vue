@@ -40,7 +40,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useStore } from 'vuex';
 import axios from 'axios';
-import Panel from '@/components/Layout/Panel.vue';
+import Panel from '@fsrc/components/Layout/Panel.vue';
 
 const store = useStore();
 const token = computed(() => store.state.currentUser?.token);

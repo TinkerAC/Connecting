@@ -46,7 +46,7 @@ import {defineComponent, h, onMounted, ref} from 'vue';
 import * as echarts from 'echarts';
 import axios from 'axios';
 import {useStore} from 'vuex';
-import Panel from '@/components/Layout/Panel.vue';
+import Panel from '@fsrc/components/Layout/Panel.vue';
 import {AlertTriangle, ClipboardList, FileText, Users} from 'lucide-vue-next';
 
 /* ---------------- 内部组件：指标卡 (渲染函数实现) ---------------- */

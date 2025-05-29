@@ -156,7 +156,7 @@ import {useRoute, useRouter} from 'vue-router';
 import {useStore} from 'vuex';
 import axios from 'axios';
 import * as echarts from 'echarts';
-import Panel from "@/components/Layout/Panel.vue";
+import Panel from "@fsrc/components/Layout/Panel.vue";
 
 const route = useRoute();
 const router = useRouter();

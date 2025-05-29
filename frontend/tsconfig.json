@@ -10,18 +10,21 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "lib": ["ESNext", "DOM"],
-
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     /* 让 TS 也认识 Vite 和 Node 全局类型 */
-    "types": ["vite/client", "node"],
-
+    "types": [
+      "vite/client",
+      "node"
+    ],
     /* ----- 关键：路径别名 ----- */
-    "baseUrl": ".",          // ① 从 frontend/src 开始解析
+    "baseUrl": ".",               // 从项目根（即 frontend/）开始解析
     "paths": {
-      "@/*": ["./src/*"]            // ② @/foo → frontend/src/foo
+      "@fsrc/*": ["src/*"]        // @fsrc/xxx → frontend/src/xxx
     }
   },
-
   /* TS 要检查的文件 */
   "include": [
     "src/**/*.ts",

@@ -12,7 +12,7 @@ sequelize
     .then(() => {
         console.log('Database synced successfully');
         app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
+            console.log(`Server is listening on Port:${PORT}`)
         });
     })
     .catch(err => {
